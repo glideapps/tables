@@ -2,8 +2,8 @@
   "name": "@glideapps/tables",
   "version": "0.0.4",
   "description": "Client for Glide API",
-  "main": "dist/lib/index.js",
-  "types": "dist/types/index.ds.ts",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "scripts": {
     "build": "tsc",
     "test": "jest"
