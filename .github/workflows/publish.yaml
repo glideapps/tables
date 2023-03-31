@@ -44,11 +44,7 @@ jobs:
           GLIDE_TOKEN: ${{ secrets.GLIDE_TOKEN }}
 
       - name: Auto Bump Version
-        run: |
-          git config --global user.name 'github-actions[bot]'
-          git config --global user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          npm version patch -m "chore(release): bump version to %s [skip ci]" # Change patch to minor or major if needed
-          git push --follow-tags
+        run: npx tsx script/patch-npm-version.ts
 
       - name: Publish to npm
         run: npm publish --access public
