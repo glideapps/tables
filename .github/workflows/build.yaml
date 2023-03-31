@@ -41,3 +41,5 @@ jobs:
 
       - name: Run tests
         run: npm test
+        env:
+          GLIDE_TOKEN: ${{ secrets.GLIDE_TOKEN }}
