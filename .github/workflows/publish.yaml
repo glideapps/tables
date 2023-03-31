@@ -40,6 +40,8 @@ jobs:
 
       - name: Run tests
         run: npm test
+        env:
+          GLIDE_TOKEN: ${{ secrets.GLIDE_TOKEN }}
 
       - name: Auto Bump Version
         run: |
