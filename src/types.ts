@@ -19,6 +19,8 @@ export type Row<T> = Pretty<
 >;
 
 export interface TableProps<T> {
+  token?: string;
+
   app: string;
   table: string;
   columns: T;
