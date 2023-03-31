@@ -2,9 +2,10 @@
   "name": "glideapps-tables",
   "version": "1.0.0",
   "description": "",
-  "main": "dist/index.js",
-  "types": "dist/index.ds.t",
+  "main": "dist/lib/index.js",
+  "types": "dist/types/index.ds.ts",
   "scripts": {
+    "build": "tsc",
     "test": "jest"
   },
   "author": "",
