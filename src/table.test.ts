@@ -1,7 +1,11 @@
 import * as glide from ".";
 
-const inventory = glide.table({
-  app: "bAFxpGXU1bHiBgUMcDgn",
+const app = glide.app({
+  id: "bAFxpGXU1bHiBgUMcDgn",
+  token: process.env.GLIDE_TOKEN,
+});
+
+const inventory = app.table({
   table: "native-table-teiOYU20237M20abgai5",
   columns: {
     Item: "string",

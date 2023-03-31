@@ -34,6 +34,26 @@ class Table<T extends ColumnSchema> {
   }
 }
 
+interface AppProps {
+  id: string;
+  token?: string;
+}
+class App {
+  constructor(private props: AppProps) {}
+
+  public table<T extends ColumnSchema>(props: Omit<TableProps<T>, "app">) {
+    return new Table<T>({
+      app: this.props.id,
+      token: this.props.token,
+      ...props,
+    });
+  }
+}
+
+export function app(props: AppProps): App {
+  return new App(props);
+}
+
 export function table<T extends ColumnSchema>(props: TableProps<T>) {
   return new Table<T>(props);
 }
