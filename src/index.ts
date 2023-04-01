@@ -26,7 +26,7 @@ class Table<T extends ColumnSchema> {
     return rows.map(
       row =>
         Object.fromEntries(
-          Object.entries(row).map(([key, value]) => [rename[key], value])
+          Object.entries(row).map(([key, value]) => [rename[key] ?? key, value])
         ) as Row<T>
     );
   }
@@ -45,7 +45,7 @@ class Table<T extends ColumnSchema> {
     return rows.map(
       row =>
         Object.fromEntries(
-          Object.entries(row).map(([key, value]) => [rename[key], value])
+          Object.entries(row).map(([key, value]) => [rename[key] ?? key, value])
         ) as FullRow<T>
     );
   }
@@ -77,6 +77,31 @@ class Table<T extends ColumnSchema> {
 
   public async addRow(row: Row<T>): Promise<RowID> {
     return this.addRows([row]).then(([id]) => id);
+  }
+
+  public async setRows(rows: { id: RowID; row: Row<T> }[]): Promise<void> {
+    const { token, app, table } = this.props;
+
+    await fetch("https://api.glideapp.io/api/function/mutateTables", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        appID: app,
+        mutations: rows.map(({ id, row }) => ({
+          kind: "set-columns-in-row",
+          tableName: table,
+          columnValues: this.renameOutgoing([row])[0],
+          rowID: id,
+        })),
+      }),
+    });
+  }
+
+  public async setRow(id: RowID, row: Row<T>): Promise<void> {
+    return await this.setRows([{ id, row }]);
   }
 
   public async deleteRows(rows: RowID[]): Promise<void> {
@@ -119,6 +144,15 @@ class Table<T extends ColumnSchema> {
     });
     const [result] = await response.json();
     return this.renameIncoming(result.rows);
+  }
+
+  public async getRow(id: RowID): Promise<FullRow<T> | undefined> {
+    const rows = await this.getRows();
+    return rows.find(r => this.getRowID(r) === id);
+  }
+
+  public getRowID(row: FullRow<T>): RowID {
+    return row.$rowID;
   }
 }
 

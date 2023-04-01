@@ -59,4 +59,22 @@ describe("table", () => {
 
     await inventory.deleteRow(rowID);
   });
+
+  it("can add then change a row", async () => {
+    const rowID = await inventory.addRow({
+      Item: "Test Item",
+      DescriptionRenamed: "Test Description",
+      Price: 100,
+    });
+
+    expect(rowID).toBeDefined();
+
+    await inventory.setRow(rowID, { Item: "Renamed" });
+
+    // wait to allow the row to be updated
+    await new Promise(resolve => setTimeout(resolve, 2000));
+
+    const renamed = await inventory.getRow(rowID);
+    expect(renamed?.Item).toBe("Renamed");
+  });
 });
