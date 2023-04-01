@@ -159,12 +159,12 @@ class Table<T extends ColumnSchema> {
     });
     const [result] = await response.json();
 
-    if(this.zodSchema !== undefined) {
-      for(const row of result.rows) {
+    if (this.zodSchema !== undefined) {
+      for (const row of result.rows) {
         const parsedRow = this.zodSchema.safeParse(row);
 
-        if(!parsedRow.success) {
-          throw new Error("Your schema and actual tables don't match!")
+        if (!parsedRow.success) {
+          throw new Error("Your schema and actual tables don't match!");
         }
       }
     }
