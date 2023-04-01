@@ -103,9 +103,6 @@ class Table<T extends ColumnSchema> {
         }),
       }
     );
-
-    const deleted = await response.json();
-    return deleted.map((row: any) => row.rowID);
   }
 
   public async deleteRow(row: RowID): Promise<void> {
