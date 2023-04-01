@@ -82,7 +82,7 @@ class Table<T extends ColumnSchema> {
   public async deleteRows(rows: RowID[]): Promise<void> {
     const { token, app, table } = this.props;
 
-    const response = await fetch("https://api.glideapp.io/api/function/mutateTables", {
+    await fetch("https://api.glideapp.io/api/function/mutateTables", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
