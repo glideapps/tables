@@ -26,9 +26,11 @@ export type Row<T extends ColumnSchema> = Pretty<
 
 export type RowID = string;
 
-export type FullRow<T extends ColumnSchema> = Row<T> & {
-  $rowID: RowID;
-};
+export type FullRow<T extends ColumnSchema> = Pretty<
+  {
+    $rowID: RowID;
+  } & Row<T>
+>;
 
 export interface TableProps<T> {
   token?: string;
