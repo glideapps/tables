@@ -16,7 +16,15 @@ const inventory = glide.table({
   },
 });
 
-const rows = await inventory.getAllRows();
+// Get all rows
+const rows = await inventory.getRows();
+
+// Add a row
+const rowID = await inventory.addRow({
+  Item: "Test Item",
+  Description: "Test Description",
+  Price: 100,
+});
 ```
 
 ## Development

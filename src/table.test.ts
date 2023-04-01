@@ -16,11 +16,20 @@ const inventory = app.table({
 
 describe("table", () => {
   it("can get rows", async () => {
-    const rows = await inventory.getAllRows();
+    const rows = await inventory.getRows();
     expect(rows).toBeDefined();
     expect(rows[0]).toBeDefined();
     expect(rows[0].Item).toBeDefined();
     expect(rows[0].Description).toBeDefined();
     expect(rows[0].Price).toBeDefined();
+  });
+
+  it("can add a row", async () => {
+    const row = await inventory.addRow({
+      Item: "Test Item",
+      Description: "Test Description",
+      Price: 100,
+    });
+    expect(row).toBeDefined();
   });
 });

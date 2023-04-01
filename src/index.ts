@@ -1,4 +1,4 @@
-import type { TableProps, Row, ColumnSchema } from "./types";
+import type { TableProps, Row, ColumnSchema, RowID } from "./types";
 
 import fetch from "cross-fetch";
 
@@ -12,7 +12,35 @@ class Table<T extends ColumnSchema> {
     };
   }
 
-  public async getAllRows(): Promise<Row<T>[]> {
+  public async addRow(row: Omit<Row<T>, "$rowID">): Promise<RowID> {
+    const { token, app, table } = this.props;
+
+    const response = await fetch(
+      "https://api.glideapp.io/api/function/mutateTables",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          appID: app,
+          mutations: [
+            {
+              kind: "add-row-to-table",
+              tableName: table,
+              columnValues: row,
+            },
+          ],
+        }),
+      }
+    );
+
+    const [added] = await response.json();
+    return added.rowID;
+  }
+
+  public async getRows(): Promise<Row<T>[]> {
     const { token, app, table } = this.props;
 
     const response = await fetch(
