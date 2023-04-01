@@ -24,7 +24,7 @@ class Table<T extends ColumnSchema> {
     );
 
     return rows.map(
-      (row) =>
+      row =>
         Object.fromEntries(
           Object.entries(row).map(([key, value]) => [rename[key], value])
         ) as Row<T>
@@ -43,7 +43,7 @@ class Table<T extends ColumnSchema> {
     );
 
     return rows.map(
-      (row) =>
+      row =>
         Object.fromEntries(
           Object.entries(row).map(([key, value]) => [rename[key], value])
         ) as FullRow<T>
@@ -55,24 +55,21 @@ class Table<T extends ColumnSchema> {
 
     const renamedRows = this.renameOutgoing(rows);
 
-    const response = await fetch(
-      "https://api.glideapp.io/api/function/mutateTables",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          appID: app,
-          mutations: renamedRows.map((row) => ({
-            kind: "add-row-to-table",
-            tableName: table,
-            columnValues: row,
-          })),
-        }),
-      }
-    );
+    const response = await fetch("https://api.glideapp.io/api/function/mutateTables", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        appID: app,
+        mutations: renamedRows.map(row => ({
+          kind: "add-row-to-table",
+          tableName: table,
+          columnValues: row,
+        })),
+      }),
+    });
 
     const added = await response.json();
     return added.map((row: any) => row.rowID);
@@ -85,24 +82,21 @@ class Table<T extends ColumnSchema> {
   public async deleteRows(rows: RowID[]): Promise<void> {
     const { token, app, table } = this.props;
 
-    const response = await fetch(
-      "https://api.glideapp.io/api/function/mutateTables",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          appID: app,
-          mutations: rows.map((row) => ({
-            kind: "delete-row",
-            tableName: table,
-            rowID: row,
-          })),
-        }),
-      }
-    );
+    const response = await fetch("https://api.glideapp.io/api/function/mutateTables", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        appID: app,
+        mutations: rows.map(row => ({
+          kind: "delete-row",
+          tableName: table,
+          rowID: row,
+        })),
+      }),
+    });
   }
 
   public async deleteRow(row: RowID): Promise<void> {
@@ -112,20 +106,17 @@ class Table<T extends ColumnSchema> {
   public async getRows(): Promise<FullRow<T>[]> {
     const { token, app, table } = this.props;
 
-    const response = await fetch(
-      "https://api.glideapp.io/api/function/queryTables",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          appID: app,
-          queries: [{ tableName: table }],
-        }),
-      }
-    );
+    const response = await fetch("https://api.glideapp.io/api/function/queryTables", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        appID: app,
+        queries: [{ tableName: table }],
+      }),
+    });
     const [result] = await response.json();
     return this.renameIncoming(result.rows);
   }
