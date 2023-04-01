@@ -25,11 +25,27 @@ describe("table", () => {
   });
 
   it("can add a row", async () => {
-    const row = await inventory.addRow({
+    const rowID = await inventory.addRow({
       Item: "Test Item",
       Description: "Test Description",
       Price: 100,
     });
-    expect(row).toBeDefined();
+    expect(rowID).toBeDefined();
+  });
+
+  it("can add multiple rows", async () => {
+    const rowIDs = await inventory.addRows([
+      {
+        Item: "Test Item 1",
+        Description: "Test Description",
+        Price: 100,
+      },
+      {
+        Item: "Test Item 2",
+        Description: "Test Description",
+        Price: 100,
+      },
+    ]);
+    expect(rowIDs.length).toBe(2);
   });
 });

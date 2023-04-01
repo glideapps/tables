@@ -12,7 +12,7 @@ class Table<T extends ColumnSchema> {
     };
   }
 
-  public async addRow(row: Omit<Row<T>, "$rowID">): Promise<RowID> {
+  public async addRows(rows: Omit<Row<T>, "$rowID">[]): Promise<RowID[]> {
     const { token, app, table } = this.props;
 
     const response = await fetch(
@@ -25,19 +25,21 @@ class Table<T extends ColumnSchema> {
         },
         body: JSON.stringify({
           appID: app,
-          mutations: [
-            {
-              kind: "add-row-to-table",
-              tableName: table,
-              columnValues: row,
-            },
-          ],
+          mutations: rows.map((row) => ({
+            kind: "add-row-to-table",
+            tableName: table,
+            columnValues: row,
+          })),
         }),
       }
     );
 
-    const [added] = await response.json();
-    return added.rowID;
+    const added = await response.json();
+    return added.map((row: any) => row.rowID);
+  }
+
+  public async addRow(row: Omit<Row<T>, "$rowID">): Promise<RowID> {
+    return this.addRows([row]).then(([id]) => id);
   }
 
   public async getRows(): Promise<Row<T>[]> {
