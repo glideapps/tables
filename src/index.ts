@@ -1,4 +1,4 @@
-import type { TableProps, Row, ColumnSchema, RowID } from "./types";
+import type { TableProps, Row, ColumnSchema, RowID, FullRow } from "./types";
 
 import fetch from "cross-fetch";
 
@@ -12,8 +12,48 @@ class Table<T extends ColumnSchema> {
     };
   }
 
-  public async addRows(rows: Omit<Row<T>, "$rowID">[]): Promise<RowID[]> {
+  private renameOutgoing(rows: Row<T>[]): Row<T>[] {
+    const { columns } = this.props;
+
+    const rename = Object.fromEntries(
+      Object.entries(columns).map(([displayName, value]) =>
+        typeof value !== "string" && typeof value.name === "string"
+          ? [displayName, value.name /* internal name */]
+          : [displayName, displayName]
+      )
+    );
+
+    return rows.map(
+      (row) =>
+        Object.fromEntries(
+          Object.entries(row).map(([key, value]) => [rename[key], value])
+        ) as Row<T>
+    );
+  }
+
+  private renameIncoming(rows: FullRow<T>[]): FullRow<T>[] {
+    const { columns } = this.props;
+
+    const rename = Object.fromEntries(
+      Object.entries(columns).map(([displayName, value]) =>
+        typeof value !== "string" && typeof value.name === "string"
+          ? [value.name /* internal name */, displayName]
+          : [displayName, displayName]
+      )
+    );
+
+    return rows.map(
+      (row) =>
+        Object.fromEntries(
+          Object.entries(row).map(([key, value]) => [rename[key], value])
+        ) as FullRow<T>
+    );
+  }
+
+  public async addRows(rows: Row<T>[]): Promise<RowID[]> {
     const { token, app, table } = this.props;
+
+    const renamedRows = this.renameOutgoing(rows);
 
     const response = await fetch(
       "https://api.glideapp.io/api/function/mutateTables",
@@ -25,7 +65,7 @@ class Table<T extends ColumnSchema> {
         },
         body: JSON.stringify({
           appID: app,
-          mutations: rows.map((row) => ({
+          mutations: renamedRows.map((row) => ({
             kind: "add-row-to-table",
             tableName: table,
             columnValues: row,
@@ -38,11 +78,11 @@ class Table<T extends ColumnSchema> {
     return added.map((row: any) => row.rowID);
   }
 
-  public async addRow(row: Omit<Row<T>, "$rowID">): Promise<RowID> {
+  public async addRow(row: Row<T>): Promise<RowID> {
     return this.addRows([row]).then(([id]) => id);
   }
 
-  public async getRows(): Promise<Row<T>[]> {
+  public async getRows(): Promise<FullRow<T>[]> {
     const { token, app, table } = this.props;
 
     const response = await fetch(
@@ -60,7 +100,7 @@ class Table<T extends ColumnSchema> {
       }
     );
     const [result] = await response.json();
-    return result.rows;
+    return this.renameIncoming(result.rows);
   }
 }
 

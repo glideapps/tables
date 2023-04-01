@@ -9,7 +9,7 @@ const inventory = app.table({
   table: "native-table-teiOYU20237M20abgai5",
   columns: {
     Item: "string",
-    Description: "string",
+    DescriptionRenamed: { type: "string", name: "Description" },
     Price: "number",
   },
 });
@@ -20,14 +20,14 @@ describe("table", () => {
     expect(rows).toBeDefined();
     expect(rows[0]).toBeDefined();
     expect(rows[0].Item).toBeDefined();
-    expect(rows[0].Description).toBeDefined();
+    expect(rows[0].DescriptionRenamed).toBeDefined();
     expect(rows[0].Price).toBeDefined();
   });
 
   it("can add a row", async () => {
     const rowID = await inventory.addRow({
       Item: "Test Item",
-      Description: "Test Description",
+      DescriptionRenamed: "Test Description",
       Price: 100,
     });
     expect(rowID).toBeDefined();
@@ -37,12 +37,12 @@ describe("table", () => {
     const rowIDs = await inventory.addRows([
       {
         Item: "Test Item 1",
-        Description: "Test Description",
+        DescriptionRenamed: "Test Description",
         Price: 100,
       },
       {
         Item: "Test Item 2",
-        Description: "Test Description",
+        DescriptionRenamed: "Test Description",
         Price: 100,
       },
     ]);
