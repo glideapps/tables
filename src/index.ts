@@ -2,6 +2,12 @@ import type { TableProps, Row, ColumnSchema, RowID, FullRow } from "./types";
 
 import fetch from "cross-fetch";
 
+type RowIdentifiable<T extends ColumnSchema> = RowID | FullRow<T>;
+
+function rowID(row: RowIdentifiable<any>): RowID {
+  return typeof row === "string" ? row : row.$rowID;
+}
+
 class Table<T extends ColumnSchema> {
   private props: TableProps<T>;
 
@@ -79,7 +85,7 @@ class Table<T extends ColumnSchema> {
     return this.addRows([row]).then(([id]) => id);
   }
 
-  public async setRows(rows: { id: RowID | FullRow<T>; row: Row<T> }[]): Promise<void> {
+  public async setRows(rows: { id: RowIdentifiable<T>; row: Row<T> }[]): Promise<void> {
     const { token, app, table } = this.props;
 
     await fetch("https://api.glideapp.io/api/function/mutateTables", {
@@ -91,23 +97,22 @@ class Table<T extends ColumnSchema> {
       body: JSON.stringify({
         appID: app,
         mutations: rows.map(({ id, row }) => {
-          const rowID = typeof id === "string" ? id : this.getRowID(id);
           return {
             kind: "set-columns-in-row",
             tableName: table,
             columnValues: this.renameOutgoing([row])[0],
-            rowID,
+            rowID: rowID(id),
           };
         }),
       }),
     });
   }
 
-  public async setRow(id: RowID | FullRow<T>, row: Row<T>): Promise<void> {
+  public async setRow(id: RowIdentifiable<T>, row: Row<T>): Promise<void> {
     return await this.setRows([{ id, row }]);
   }
 
-  public async deleteRows(rows: RowID[]): Promise<void> {
+  public async deleteRows(rows: RowIdentifiable<T>[]): Promise<void> {
     const { token, app, table } = this.props;
 
     await fetch("https://api.glideapp.io/api/function/mutateTables", {
@@ -121,13 +126,13 @@ class Table<T extends ColumnSchema> {
         mutations: rows.map(row => ({
           kind: "delete-row",
           tableName: table,
-          rowID: row,
+          rowID: rowID(row),
         })),
       }),
     });
   }
 
-  public async deleteRow(row: RowID): Promise<void> {
+  public async deleteRow(row: RowIdentifiable<T>): Promise<void> {
     await this.deleteRows([row]);
   }
 
@@ -151,11 +156,7 @@ class Table<T extends ColumnSchema> {
 
   public async getRow(id: RowID): Promise<FullRow<T> | undefined> {
     const rows = await this.getRows();
-    return rows.find(r => this.getRowID(r) === id);
-  }
-
-  public getRowID(row: FullRow<T>): RowID {
-    return row.$rowID;
+    return rows.find(r => rowID(r) === id);
   }
 }
 
