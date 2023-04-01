@@ -79,7 +79,7 @@ class Table<T extends ColumnSchema> {
     return this.addRows([row]).then(([id]) => id);
   }
 
-  public async setRows(rows: { id: RowID; row: Row<T> }[]): Promise<void> {
+  public async setRows(rows: { id: RowID | FullRow<T>; row: Row<T> }[]): Promise<void> {
     const { token, app, table } = this.props;
 
     await fetch("https://api.glideapp.io/api/function/mutateTables", {
@@ -90,17 +90,20 @@ class Table<T extends ColumnSchema> {
       },
       body: JSON.stringify({
         appID: app,
-        mutations: rows.map(({ id, row }) => ({
-          kind: "set-columns-in-row",
-          tableName: table,
-          columnValues: this.renameOutgoing([row])[0],
-          rowID: id,
-        })),
+        mutations: rows.map(({ id, row }) => {
+          const rowID = typeof id === "string" ? id : this.getRowID(id);
+          return {
+            kind: "set-columns-in-row",
+            tableName: table,
+            columnValues: this.renameOutgoing([row])[0],
+            rowID,
+          };
+        }),
       }),
     });
   }
 
-  public async setRow(id: RowID, row: Row<T>): Promise<void> {
+  public async setRow(id: RowID | FullRow<T>, row: Row<T>): Promise<void> {
     return await this.setRows([{ id, row }]);
   }
 
@@ -160,6 +163,7 @@ interface AppProps {
   id: string;
   token?: string;
 }
+
 class App {
   constructor(private props: AppProps) {}
 
