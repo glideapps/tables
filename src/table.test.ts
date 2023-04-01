@@ -1,4 +1,5 @@
 import * as glide from ".";
+import type { RowOf } from ".";
 
 const app = glide.app({
   id: "bAFxpGXU1bHiBgUMcDgn",
@@ -14,6 +15,7 @@ const inventory = app.table({
   },
 });
 
+
 describe("table", () => {
   it("can get rows", async () => {
     const rows = await inventory.getRows();
@@ -22,6 +24,10 @@ describe("table", () => {
     expect(rows[0].Item).toBeDefined();
     expect(rows[0].DescriptionRenamed).toBeDefined();
     expect(rows[0].Price).toBeDefined();
+  });
+
+  it("can get the row type", async () => {
+      type InventoryItem = RowOf<typeof inventory>;
   });
 
   it("can add a row", async () => {

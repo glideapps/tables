@@ -8,6 +8,8 @@ function rowID(row: RowIdentifiable<any>): RowID {
   return typeof row === "string" ? row : row.$rowID;
 }
 
+export type RowOf<T extends Table<any>> = T extends Table<infer R> ? FullRow<R> : never;
+
 class Table<T extends ColumnSchema> {
   private props: TableProps<T>;
 
