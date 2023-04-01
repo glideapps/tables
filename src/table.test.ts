@@ -48,4 +48,15 @@ describe("table", () => {
     ]);
     expect(rowIDs.length).toBe(2);
   });
+
+  it("can add then delete a row", async () => {
+    const rowID = await inventory.addRow({
+      Item: "Test Item",
+      DescriptionRenamed: "Test Description",
+      Price: 100,
+    });
+    expect(rowID).toBeDefined();
+
+    await inventory.deleteRow(rowID);
+  });
 });

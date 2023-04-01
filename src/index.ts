@@ -82,6 +82,36 @@ class Table<T extends ColumnSchema> {
     return this.addRows([row]).then(([id]) => id);
   }
 
+  public async deleteRows(rows: RowID[]): Promise<void> {
+    const { token, app, table } = this.props;
+
+    const response = await fetch(
+      "https://api.glideapp.io/api/function/mutateTables",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          appID: app,
+          mutations: rows.map((row) => ({
+            kind: "delete-row",
+            tableName: table,
+            rowID: row,
+          })),
+        }),
+      }
+    );
+
+    const deleted = await response.json();
+    return deleted.map((row: any) => row.rowID);
+  }
+
+  public async deleteRow(row: RowID): Promise<void> {
+    await this.deleteRows([row]);
+  }
+
   public async getRows(): Promise<FullRow<T>[]> {
     const { token, app, table } = this.props;
 
