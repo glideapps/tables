@@ -199,6 +199,6 @@ export function app(props: AppProps): App {
   return new App(props);
 }
 
-export function table<T extends ColumnSchema>(props: TableProps<T>) {
-  return new Table<T>(props);
+export function table<T extends ColumnSchema>(props: TableProps<T>, options: TableOptions = {}) {
+  return new Table<T>(props, options);
 }
