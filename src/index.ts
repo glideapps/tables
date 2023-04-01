@@ -1,6 +1,8 @@
-import type { TableProps, Row, ColumnSchema, RowID, FullRow } from "./types";
+import { AnyZodObject } from "zod";
+import type { TableProps, Row, ColumnSchema, RowID, FullRow, TableOptions } from "./types";
 
 import fetch from "cross-fetch";
+import { columnToZodSchema } from "./column-to-zod";
 
 type RowIdentifiable<T extends ColumnSchema> = RowID | FullRow<T>;
 
@@ -10,12 +12,17 @@ function rowID(row: RowIdentifiable<any>): RowID {
 
 class Table<T extends ColumnSchema> {
   private props: TableProps<T>;
+  private zodSchema: AnyZodObject | undefined;
 
-  constructor(props: TableProps<T>) {
+  constructor(props: TableProps<T>, options: TableOptions = {}) {
     this.props = {
       token: process.env.GLIDE_TOKEN,
       ...props,
     };
+
+    if (options.validate === true) {
+      this.zodSchema = columnToZodSchema(props.columns);
+    }
   }
 
   private renameOutgoing(rows: Row<T>[]): Row<T>[] {
@@ -151,6 +158,17 @@ class Table<T extends ColumnSchema> {
       }),
     });
     const [result] = await response.json();
+
+    if(this.zodSchema !== undefined) {
+      for(const row of result.rows) {
+        const parsedRow = this.zodSchema.safeParse(row);
+
+        if(!parsedRow.success) {
+          throw new Error("Your schema and actual tables don't match!")
+        }
+      }
+    }
+
     return this.renameIncoming(result.rows);
   }
 
