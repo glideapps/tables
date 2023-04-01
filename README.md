@@ -25,6 +25,14 @@ const rowID = await inventory.addRow({
   Description: "Test Description",
   Price: 100,
 });
+
+// Change a row
+await inventory.setRow(rowID, {
+  Price: 200,
+});
+
+// Delete a row
+await inventory.deleteRow(rowID);
 ```
 
 ## Development
