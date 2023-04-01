@@ -72,7 +72,7 @@ describe("table", () => {
     await inventory.setRow(rowID, { Item: "Renamed" });
 
     // wait to allow the row to be updated
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    await new Promise(resolve => setTimeout(resolve, 3500));
 
     const renamed = await inventory.getRow(rowID);
     expect(renamed?.Item).toBe("Renamed");
