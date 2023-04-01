@@ -21,6 +21,9 @@ const inventory = glide.table({
   },
 });
 
+// Name the row type (optional)
+type InventoryItem = glide.RowOf<typeof inventory>;
+
 // Get all rows
 const rows = await inventory.getRows();
 

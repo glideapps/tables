@@ -15,8 +15,9 @@ const inventory = app.table({
   },
 });
 
-
 describe("table", () => {
+  jest.setTimeout(60_000);
+
   it("can get rows", async () => {
     const rows = await inventory.getRows();
     expect(rows).toBeDefined();
@@ -27,7 +28,9 @@ describe("table", () => {
   });
 
   it("can get the row type", async () => {
-      type InventoryItem = RowOf<typeof inventory>;
+    // This test doesn't actually do anything, but it's here to show that the
+    // type can be constructed. Put your cursor over it to check.
+    type InventoryItem = RowOf<typeof inventory>;
   });
 
   it("can add a row", async () => {
@@ -78,7 +81,7 @@ describe("table", () => {
     await inventory.setRow(rowID, { Item: "Renamed" });
 
     // wait to allow the row to be updated
-    await new Promise(resolve => setTimeout(resolve, 3500));
+    await new Promise(resolve => setTimeout(resolve, 5_000));
 
     const renamed = await inventory.getRow(rowID);
     expect(renamed?.Item).toBe("Renamed");

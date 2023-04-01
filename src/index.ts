@@ -8,6 +8,9 @@ function rowID(row: RowIdentifiable<any>): RowID {
   return typeof row === "string" ? row : row.$rowID;
 }
 
+/**
+ * For referring to the type of a row in a table.
+ */
 export type RowOf<T extends Table<any>> = T extends Table<infer R> ? FullRow<R> : never;
 
 class Table<T extends ColumnSchema> {
