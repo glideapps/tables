@@ -1,16 +1,31 @@
-export type ColumnType = "string" | "number";
+export type ColumnStringType =
+  | "string"
+  | "uri"
+  | "image-uri"
+  | "audio-uri"
+  | "date"
+  | "time"
+  | "date-time"
+  | "markdown"
+  | "phone-number"
+  | "email-address"
+  | "emoji"
+  | "duration";
 
+export type ColumnType = ColumnStringType | "number" | "boolean";
 export type ColumnSchemaEntry = { type: ColumnType; name?: string };
 
 export type ColumnSchema = Record<string, ColumnType | ColumnSchemaEntry>;
 
 type Pretty<T> = { [K in keyof T]: T[K] } & {};
 
-type ColumnTypeToType<T extends ColumnType> = T extends "string"
+type ColumnTypeToType<T extends ColumnType> = T extends ColumnStringType
   ? string
   : T extends "number"
   ? number
-  : never;
+  : T extends "boolean"
+  ? boolean
+  : unknown;
 
 type ColumnTypeOrSchemaEntryToType<T> = T extends ColumnType
   ? ColumnTypeToType<T>
