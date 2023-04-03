@@ -1,4 +1,4 @@
-import type { TableProps, Row, ColumnSchema, RowID, FullRow } from "./types";
+import type { TableProps, Row, ColumnSchema, RowID, FullRow, AppProps } from "./types";
 
 import fetch from "cross-fetch";
 
@@ -12,6 +12,8 @@ function rowID(row: RowIdentifiable<any>): RowID {
  * For referring to the type of a row in a table.
  */
 export type RowOf<T extends Table<any>> = T extends Table<infer R> ? FullRow<R> : never;
+
+const defaultEndpoint = "https://api.glideapp.io/api/function";
 
 class Table<T extends ColumnSchema> {
   private props: TableProps<T>;
@@ -66,7 +68,7 @@ class Table<T extends ColumnSchema> {
 
     const renamedRows = this.renameOutgoing(rows);
 
-    const response = await fetch("https://api.glideapp.io/api/function/mutateTables", {
+    const response = await fetch(this.endpoint("/mutateTables"), {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -90,10 +92,15 @@ class Table<T extends ColumnSchema> {
     return this.addRows([row]).then(([id]) => id);
   }
 
+  endpoint(path: string = "/"): string {
+    const base = this.props.endpoint ?? defaultEndpoint;
+    return `${base}${path}`;
+  }
+
   public async setRows(rows: { id: RowIdentifiable<T>; row: Row<T> }[]): Promise<void> {
     const { token, app, table } = this.props;
 
-    await fetch("https://api.glideapp.io/api/function/mutateTables", {
+    await fetch(this.endpoint("/mutateTables"), {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -120,7 +127,7 @@ class Table<T extends ColumnSchema> {
   public async deleteRows(rows: RowIdentifiable<T>[]): Promise<void> {
     const { token, app, table } = this.props;
 
-    await fetch("https://api.glideapp.io/api/function/mutateTables", {
+    await fetch(this.endpoint("/mutateTables"), {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -144,7 +151,7 @@ class Table<T extends ColumnSchema> {
   public async getRows(): Promise<FullRow<T>[]> {
     const { token, app, table } = this.props;
 
-    const response = await fetch("https://api.glideapp.io/api/function/queryTables", {
+    const response = await fetch(this.endpoint("/queryTables"), {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -155,6 +162,11 @@ class Table<T extends ColumnSchema> {
         queries: [{ tableName: table }],
       }),
     });
+
+    if (!response.ok) {
+      throw new Error(`Failed to get rows: ${response.status} ${response.statusText}`);
+    }
+
     const [result] = await response.json();
     return this.renameIncoming(result.rows);
   }
@@ -165,11 +177,6 @@ class Table<T extends ColumnSchema> {
   }
 }
 
-interface AppProps {
-  id: string;
-  token?: string;
-}
-
 class App {
   constructor(private props: AppProps) {}
 
@@ -177,6 +184,7 @@ class App {
     return new Table<T>({
       app: this.props.id,
       token: this.props.token,
+      endpoint: this.props.endpoint,
       ...props,
     });
   }

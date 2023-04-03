@@ -15,6 +15,16 @@ const inventory = app.table({
   },
 });
 
+const inventoryStaging = glide.table({
+  token: process.env.GLIDE_TOKEN_STAGING,
+  app: "xijMuHE11kxVRXoMRzd6",
+  table: "native-table-1PvO9KogUzGdhVvg5gwk",
+  endpoint: "https://staging.heyglide.com/api/container",
+  columns: {
+    Name: "string",
+  },
+});
+
 describe("table", () => {
   jest.setTimeout(60_000);
 
@@ -25,6 +35,11 @@ describe("table", () => {
     expect(rows[0].Item).toBeDefined();
     expect(rows[0].DescriptionRenamed).toBeDefined();
     expect(rows[0].Price).toBeDefined();
+  });
+
+  it("can get rows on staging", async () => {
+    const rows = await inventoryStaging.getRows();
+    expect(rows).toBeDefined();
   });
 
   it("can get the row type", async () => {
