@@ -44,6 +44,20 @@ await inventory.setRow(rowID, {
 await inventory.deleteRow(rowID);
 ```
 
+### Staging
+
+```ts
+const inventoryStaging = glide.table({
+  endpoint: "https://staging.heyglide.com/api/container",
+
+  app: "xijMuHE11kxVRXoMRzd6",
+  table: "native-table-1PvO9KogUzGdhVvg5gwk",
+  columns: {
+    /* ... */
+  },
+});
+```
+
 ## Development
 
 ```shell
