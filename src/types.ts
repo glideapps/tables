@@ -49,8 +49,15 @@ export type FullRow<T extends ColumnSchema> = Pretty<
 
 export interface TableProps<T> {
   token?: string;
+  endpoint?: string;
 
   app: string;
   table: string;
   columns: T;
+}
+
+export interface AppProps {
+  id: string;
+  token?: string;
+  endpoint?: string;
 }
