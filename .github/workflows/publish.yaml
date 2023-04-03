@@ -42,6 +42,7 @@ jobs:
         run: npm test
         env:
           GLIDE_TOKEN: ${{ secrets.GLIDE_TOKEN }}
+          GLIDE_TOKEN_STAGING: ${{ secrets.GLIDE_TOKEN_STAGING }}
 
       - name: Auto Bump Version
         run: npx tsx script/patch-npm-version.ts
