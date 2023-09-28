@@ -10,7 +10,7 @@
     "allowSyntheticDefaultImports": true,
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
-    "outDir": "dist",
+    "outDir": "dist/es6",
     "typeRoots": ["node_modules/@types"]
   },
   "include": ["src"]
