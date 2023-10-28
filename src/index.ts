@@ -18,6 +18,14 @@ const defaultEndpoint = "https://api.glideapp.io/api/function";
 class Table<T extends ColumnSchema> {
   private props: TableProps<T>;
 
+  public get app(): string {
+    return this.props.app;
+  }
+
+  public get table(): string {
+    return this.props.table;
+  }
+
   constructor(props: TableProps<T>) {
     this.props = {
       token: process.env.GLIDE_TOKEN,
