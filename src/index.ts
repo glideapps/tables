@@ -191,7 +191,7 @@ class Table<T extends ColumnSchema> {
 class App {
   constructor(private props: AppProps) {}
 
-  public table<T extends ColumnSchema = {}>(props: Omit<TableProps<T>, "app">) {
+  public table<T extends ColumnSchema>(props: Omit<TableProps<T>, "app">) {
     return new Table<T>({
       app: this.props.id,
       token: this.props.token,
