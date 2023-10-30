@@ -101,7 +101,10 @@ class Table<T extends ColumnSchema> {
   }
 
   endpoint(path: string = "/"): string {
-    const base = this.props.endpoint ?? defaultEndpoint;
+    let base = this.props.endpoint ?? defaultEndpoint;
+    if (!base.includes("://")) {
+      base = `https://${base}`;
+    }
     return `${base}${path}`;
   }
 
@@ -188,7 +191,7 @@ class Table<T extends ColumnSchema> {
 class App {
   constructor(private props: AppProps) {}
 
-  public table<T extends ColumnSchema>(props: Omit<TableProps<T>, "app">) {
+  public table<T extends ColumnSchema = {}>(props: Omit<TableProps<T>, "app">) {
     return new Table<T>({
       app: this.props.id,
       token: this.props.token,
