@@ -101,7 +101,10 @@ class Table<T extends ColumnSchema> {
   }
 
   endpoint(path: string = "/"): string {
-    const base = this.props.endpoint ?? defaultEndpoint;
+    let base = this.props.endpoint ?? defaultEndpoint;
+    if (!base.includes("://")) {
+      base = `https://${base}`;
+    }
     return `${base}${path}`;
   }
 
