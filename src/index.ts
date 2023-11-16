@@ -103,8 +103,8 @@ class Table<T extends ColumnSchema> {
   /**
    * Adds rows to the table.
    *
-   * @param {Row<T>[]} rows - An array of rows to add to the table.
-   * @returns {Promise<RowID[]>} - A promise that resolves to an array of row IDs for the added rows.
+   * @param rows An array of rows to add to the table.
+   * @returns A promise that resolves to an array of row IDs for the added rows.
    */
   public async addRows(rows: Row<T>[]): Promise<RowID[]> {
     const { token, app, table } = this.props;
@@ -134,8 +134,8 @@ class Table<T extends ColumnSchema> {
   /**
    * Adds rows to the table.
    *
-   * @param {Row<T>[]} rows - An array of rows to add to the table.
-   * @returns {Promise<RowID[]>} - A promise that resolves to an array of row IDs for the added rows.
+   * @param rows An array of rows to add to the table.
+   * @returns A promise that resolves to an array of row IDs for the added rows.
    */
   public async addRow(row: Row<T>): Promise<RowID> {
     return this.addRows([row]).then(([id]) => id);
@@ -152,8 +152,8 @@ class Table<T extends ColumnSchema> {
   /**
    * Updates multiple rows in the table.
    *
-   * @param {Array<{ id: RowIdentifiable<T>; row: Row<T> }>} rows - An array of objects, each containing an id and a row to update in the table.
-   * @returns {Promise<void>} - A promise that resolves when the rows have been updated.
+   * @param rows An array of objects, each containing an id and a row to update in the table.
+   * @returns A promise that resolves when the rows have been updated.
    */
   async setRows(rows: { id: RowIdentifiable<T>; row: Row<T> }[]): Promise<void> {
     const { token, app, table } = this.props;
@@ -181,9 +181,9 @@ class Table<T extends ColumnSchema> {
   /**
    * Sets values in a single row in the table.
    *
-   * @param {RowIdentifiable<T>} id - The ID of the row to set.
-   * @param {Row<T>} row - The row data to set.
-   * @returns {Promise<void>} - A promise that resolves when the row has been set.
+   * @param id The ID of the row to set.
+   * @param row The row data to set.
+   * @returns A promise that resolves when the row has been set.
    */
   public async setRow(id: RowIdentifiable<T>, row: Row<T>): Promise<void> {
     return await this.setRows([{ id, row }]);
@@ -192,8 +192,8 @@ class Table<T extends ColumnSchema> {
   /**
    * Deletes multiple rows from the table.
    *
-   * @param {RowIdentifiable<T>[]} rows - An array of row identifiers to delete from the table.
-   * @returns {Promise<void>} - A promise that resolves when the rows have been deleted.
+   * @param rows An array of row identifiers to delete from the table.
+   * @returns A promise that resolves when the rows have been deleted.
    */
   public async deleteRows(rows: RowIdentifiable<T>[]): Promise<void> {
     const { token, app, table } = this.props;
@@ -218,8 +218,8 @@ class Table<T extends ColumnSchema> {
   /**
    * Deletes a single row from the table.
    *
-   * @param {RowIdentifiable<T>} row - The identifier of the row to delete from the table.
-   * @returns {Promise<void>} - A promise that resolves when the row has been deleted.
+   * @param row The identifier of the row to delete from the table.
+   * @returns A promise that resolves when the row has been deleted.
    */
   public async deleteRow(row: RowIdentifiable<T>): Promise<void> {
     await this.deleteRows([row]);
@@ -352,8 +352,8 @@ class App {
 /**
  * Creates a new App instance for querying an app
  *
- * @param {AppProps | string} props - If a string is provided, it is used as the id of the App. If an AppProps object is provided, it is used as the properties for the App.
- * @returns {App} - The newly created App instance.
+ * @param props If a string is provided, it is used as the id of the App. If an AppProps object is provided, it is used as the properties for the App.
+ * @returns The newly created App instance.
  */
 export function app(props: AppProps | string): App {
   if (typeof props === "string") {
@@ -365,9 +365,9 @@ export function app(props: AppProps | string): App {
 /**
  * Retrieves all applications.
  *
- * @param {object} props - An optional object containing a token.
- * @param {string} props.token - An optional token for authentication.
- * @returns {Promise<App[] | undefined>} - A promise that resolves to an array of applications if successful, or undefined.
+ * @param props An optional object containing a token.
+ * @param props.token An optional token for authentication.
+ * @returns A promise that resolves to an array of applications if successful, or undefined.
  */
 export async function getApps(props: { token?: string } = {}): Promise<App[] | undefined> {
   const client = makeClient(props);
@@ -380,10 +380,10 @@ export async function getApps(props: { token?: string } = {}): Promise<App[] | u
 /**
  * Retrieves an app by its name.
  *
- * @param {string} name - The name of the application to retrieve.
- * @param {object} props - An optional object containing a token.
- * @param {string} props.token - An optional token for authentication.
- * @returns {Promise<App | undefined>} - A promise that resolves to the application if found, or undefined.
+ * @param name The name of the application to retrieve.
+ * @param props An optional object containing a token.
+ * @param props.token An optional token for authentication.
+ * @returns A promise that resolves to the application if found, or undefined.
  */
 export async function getAppNamed(
   name: string,
@@ -396,8 +396,8 @@ export async function getAppNamed(
 /**
  * This function creates a new Table object with the provided properties.
  *
- * @param {TableProps<T>} props - The properties to create the table with.
- * @returns {Table<T>} - The newly created table.
+ * @param props The properties to create the table with.
+ * @returns The newly created table.
  */
 export function table<T extends ColumnSchema>(props: TableProps<T>) {
   return new Table<T>(props);
