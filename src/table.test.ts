@@ -1,3 +1,5 @@
+require("dotenv").config();
+
 import * as glide from ".";
 import type { RowOf } from ".";
 
@@ -100,5 +102,12 @@ describe("table", () => {
 
     const renamed = await inventory.getRow(rowID);
     expect(renamed?.Item).toBe("Renamed");
+  });
+
+  it("can get schema", async () => {
+    const {
+      data: { columns },
+    } = await inventory.getSchema();
+    expect(columns).toBeTruthy();
   });
 });

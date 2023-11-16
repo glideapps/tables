@@ -1,3 +1,4 @@
+import { Client, makeClient } from "./rest";
 import type { TableProps, Row, ColumnSchema, RowID, FullRow, AppProps } from "./types";
 
 import fetch from "cross-fetch";
@@ -18,6 +19,8 @@ const defaultEndpoint = "https://api.glideapp.io/api/function";
 class Table<T extends ColumnSchema> {
   private props: TableProps<T>;
 
+  private client: Client;
+
   public get app(): string {
     return this.props.app;
   }
@@ -31,6 +34,9 @@ class Table<T extends ColumnSchema> {
       token: process.env.GLIDE_TOKEN,
       ...props,
     };
+    this.client = makeClient({
+      token: process.env.GLIDE_TOKEN!,
+    });
   }
 
   private renameOutgoing(rows: Row<T>[]): Row<T>[] {
@@ -157,6 +163,20 @@ class Table<T extends ColumnSchema> {
 
   public async deleteRow(row: RowIdentifiable<T>): Promise<void> {
     await this.deleteRows([row]);
+  }
+
+  public async getSchema(): Promise<{
+    data: { columns: Array<{ id: string; name: string; type: { kind: string } }> };
+  }> {
+    const { app, table } = this.props;
+
+    const response = await this.client.get(`/apps/${app}/tables/${table}/schema`);
+
+    if (response.status !== 200) {
+      throw new Error(`Failed to get schema: ${response.status} ${response.statusText}`);
+    }
+
+    return await response.json();
   }
 
   public async getRows(): Promise<FullRow<T>[]> {
