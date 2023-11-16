@@ -72,24 +72,21 @@ await inventory.deleteRow(rowID);
 const schema = await inventory.getSchema();
 ```
 
-### Staging
-
-```ts
-const inventoryStaging = glide.table({
-  endpoint: "https://staging.heyglide.com/api/container",
-
-  app: "xijMuHE11kxVRXoMRzd6",
-  table: "native-table-1PvO9KogUzGdhVvg5gwk",
-  columns: {
-    /* ... */
-  },
-});
-```
-
 ## Development
 
 ```shell
 nvm i
 npm run build
 npm t
+```
+
+## Advanced Options
+
+You can specify an alternate endpoint to use Glide's staging environment (for internal testing by Glide).
+
+```ts
+const inventoryStaging = glide.table({
+  endpoint: "https://staging.heyglide.com/api/container",
+  /* ... */
+});
 ```
