@@ -27,6 +27,10 @@ class Table<T extends ColumnSchema> {
     return this.props.app;
   }
 
+  public get id(): string {
+    return this.props.table;
+  }
+
   public get table(): string {
     return this.props.table;
   }
@@ -37,8 +41,8 @@ class Table<T extends ColumnSchema> {
 
   constructor(props: TableProps<T>) {
     this.props = {
-      token: process.env.GLIDE_TOKEN,
       ...props,
+      token: props.token ?? process.env.GLIDE_TOKEN,
     };
     this.client = makeClient({
       token: process.env.GLIDE_TOKEN!,
@@ -201,7 +205,12 @@ class Table<T extends ColumnSchema> {
     });
 
     if (!response.ok) {
-      throw new Error(`Failed to get rows: ${response.status} ${response.statusText}`);
+      throw new Error(
+        `Failed to get rows: ${response.status} ${response.statusText} ${JSON.stringify({
+          app,
+          table,
+        })}`
+      );
     }
 
     const [result] = await response.json();
@@ -215,13 +224,19 @@ class Table<T extends ColumnSchema> {
 }
 
 class App {
+  private props: AppProps;
   private client: Client;
+
+  public get id() {
+    return this.props.id;
+  }
 
   public get name() {
     return this.props.name;
   }
 
-  constructor(private props: AppProps) {
+  constructor(props: AppProps) {
+    this.props = { ...props, token: props.token ?? process.env.GLIDE_TOKEN! };
     this.client = makeClient({
       token: process.env.GLIDE_TOKEN!,
     });
