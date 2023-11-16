@@ -41,13 +41,8 @@ class Table<T extends ColumnSchema> {
 
   constructor(props: TableProps<T>) {
     const token = props.token ?? process.env.GLIDE_TOKEN!;
-    this.props = {
-      ...props,
-      token,
-    };
-    this.client = makeClient({
-      token,
-    });
+    this.props = { ...props, token };
+    this.client = makeClient({ token });
   }
 
   private renameOutgoing(rows: Row<T>[]): Row<T>[] {
@@ -239,9 +234,7 @@ class App {
   constructor(props: AppProps) {
     const token = props.token ?? process.env.GLIDE_TOKEN!;
     this.props = { ...props, token };
-    this.client = makeClient({
-      token,
-    });
+    this.client = makeClient({ token });
   }
 
   public async getTableNamed(name: string) {
