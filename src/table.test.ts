@@ -110,4 +110,15 @@ describe("table", () => {
     } = await inventory.getSchema();
     expect(columns).toBeTruthy();
   });
+
+  it.only("can get tables", async () => {
+    const tables = await app.getTables();
+    expect(tables).toBeDefined();
+    expect(tables?.length).toBeGreaterThan(0);
+  });
+
+  it.only("can get a table by name", async () => {
+    const table = await app.getTableNamed("Inv - Inventory");
+    expect(table).toBeDefined();
+  });
 });

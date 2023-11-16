@@ -29,6 +29,10 @@ class Table<T extends ColumnSchema> {
     return this.props.table;
   }
 
+  public get name() {
+    return this.props.name;
+  }
+
   constructor(props: TableProps<T>) {
     this.props = {
       token: process.env.GLIDE_TOKEN,
@@ -209,7 +213,28 @@ class Table<T extends ColumnSchema> {
 }
 
 class App {
-  constructor(private props: AppProps) {}
+  private client: Client;
+
+  constructor(private props: AppProps) {
+    this.client = makeClient({
+      token: process.env.GLIDE_TOKEN!,
+    });
+  }
+
+  public async getTableNamed(name: string) {
+    const tables = await this.getTables();
+    return tables?.find(t => t.name === name);
+  }
+
+  public async getTables() {
+    const { id } = this.props;
+    const result = await this.client.get(`/apps/${id}/tables`);
+
+    if (result.status !== 200) return undefined;
+
+    const { data: tables }: { data: Array<{ id: string; name: string }> } = await result.json();
+    return tables.map(t => this.table({ table: t.id, name: t.name, columns: {} }));
+  }
 
   public table<T extends ColumnSchema>(props: Omit<TableProps<T>, "app">) {
     return new Table<T>({
