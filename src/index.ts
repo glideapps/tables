@@ -40,12 +40,13 @@ class Table<T extends ColumnSchema> {
   }
 
   constructor(props: TableProps<T>) {
+    const token = props.token ?? process.env.GLIDE_TOKEN!;
     this.props = {
       ...props,
-      token: props.token ?? process.env.GLIDE_TOKEN,
+      token,
     };
     this.client = makeClient({
-      token: process.env.GLIDE_TOKEN!,
+      token,
     });
   }
 
@@ -236,9 +237,10 @@ class App {
   }
 
   constructor(props: AppProps) {
-    this.props = { ...props, token: props.token ?? process.env.GLIDE_TOKEN! };
+    const token = props.token ?? process.env.GLIDE_TOKEN!;
+    this.props = { ...props, token };
     this.client = makeClient({
-      token: process.env.GLIDE_TOKEN!,
+      token,
     });
   }
 
