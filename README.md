@@ -1,6 +1,31 @@
 # Glide Tables Client
 
-## Usage
+## Authorization
+
+Set `GLIDE_TOKEN` environment variable or pass the token as props.
+
+## Apps
+
+```ts
+import * as glide from "@glideapps/tables";
+
+// Create a reference to an app using its ID
+const myApp = glide.app("bAFxpGXU1bHiBgUMcDgn");
+
+// Or get by name
+const myApp = await glide.getAppNamed("Employee Directory");
+
+// Get all tables
+const tables = await myApp.getTables();
+
+// Get a table by name
+const users = await myApp.getTableNamed("Users");
+
+// List all apps
+const apps = await glide.getApps();
+```
+
+## Tables
 
 ```ts
 import * as glide from "@glideapps/tables";
@@ -42,6 +67,9 @@ await inventory.setRow(rowID, {
 
 // Delete a row
 await inventory.deleteRow(rowID);
+
+// Get table schema info (columns and their types)
+const schema = await inventory.getSchema();
 ```
 
 ### Staging

@@ -1,8 +1,11 @@
+import { Client, makeClient } from "./rest";
 import type { TableProps, Row, ColumnSchema, RowID, FullRow, AppProps } from "./types";
 
 import fetch from "cross-fetch";
 
 type RowIdentifiable<T extends ColumnSchema> = RowID | FullRow<T>;
+
+type IDName = { id: string; name: string };
 
 function rowID(row: RowIdentifiable<any>): RowID {
   return typeof row === "string" ? row : row.$rowID;
@@ -18,19 +21,32 @@ const defaultEndpoint = "https://api.glideapp.io/api/function";
 class Table<T extends ColumnSchema> {
   private props: TableProps<T>;
 
+  private client: Client;
+
   public get app(): string {
     return this.props.app;
+  }
+
+  public get id(): string {
+    return this.props.table;
   }
 
   public get table(): string {
     return this.props.table;
   }
 
+  public get name() {
+    return this.props.name;
+  }
+
   constructor(props: TableProps<T>) {
     this.props = {
-      token: process.env.GLIDE_TOKEN,
       ...props,
+      token: props.token ?? process.env.GLIDE_TOKEN,
     };
+    this.client = makeClient({
+      token: process.env.GLIDE_TOKEN!,
+    });
   }
 
   private renameOutgoing(rows: Row<T>[]): Row<T>[] {
@@ -159,6 +175,20 @@ class Table<T extends ColumnSchema> {
     await this.deleteRows([row]);
   }
 
+  public async getSchema(): Promise<{
+    data: { columns: Array<{ id: string; name: string; type: { kind: string } }> };
+  }> {
+    const { app, table } = this.props;
+
+    const response = await this.client.get(`/apps/${app}/tables/${table}/schema`);
+
+    if (response.status !== 200) {
+      throw new Error(`Failed to get schema: ${response.status} ${response.statusText}`);
+    }
+
+    return await response.json();
+  }
+
   public async getRows(): Promise<FullRow<T>[]> {
     const { token, app, table } = this.props;
 
@@ -175,7 +205,12 @@ class Table<T extends ColumnSchema> {
     });
 
     if (!response.ok) {
-      throw new Error(`Failed to get rows: ${response.status} ${response.statusText}`);
+      throw new Error(
+        `Failed to get rows: ${response.status} ${response.statusText} ${JSON.stringify({
+          app,
+          table,
+        })}`
+      );
     }
 
     const [result] = await response.json();
@@ -189,7 +224,38 @@ class Table<T extends ColumnSchema> {
 }
 
 class App {
-  constructor(private props: AppProps) {}
+  private props: AppProps;
+  private client: Client;
+
+  public get id() {
+    return this.props.id;
+  }
+
+  public get name() {
+    return this.props.name;
+  }
+
+  constructor(props: AppProps) {
+    this.props = { ...props, token: props.token ?? process.env.GLIDE_TOKEN! };
+    this.client = makeClient({
+      token: process.env.GLIDE_TOKEN!,
+    });
+  }
+
+  public async getTableNamed(name: string) {
+    const tables = await this.getTables();
+    return tables?.find(t => t.name === name);
+  }
+
+  public async getTables() {
+    const { id } = this.props;
+    const result = await this.client.get(`/apps/${id}/tables`);
+
+    if (result.status !== 200) return undefined;
+
+    const { data: tables }: { data: IDName[] } = await result.json();
+    return tables.map(t => this.table({ table: t.id, name: t.name, columns: {} }));
+  }
 
   public table<T extends ColumnSchema>(props: Omit<TableProps<T>, "app">) {
     return new Table<T>({
@@ -201,8 +267,27 @@ class App {
   }
 }
 
-export function app(props: AppProps): App {
+export function app(props: AppProps | string): App {
+  if (typeof props === "string") {
+    props = { id: props };
+  }
   return new App(props);
+}
+
+export async function getApps(props: { token?: string } = {}): Promise<App[] | undefined> {
+  const client = makeClient(props);
+  const response = await client.get(`/apps`);
+  if (response.status !== 200) return undefined;
+  const { data: apps }: { data: IDName[] } = await response.json();
+  return apps.map(idName => app({ ...props, ...idName }));
+}
+
+export async function getAppNamed(
+  name: string,
+  props: { token?: string } = {}
+): Promise<App | undefined> {
+  const apps = await getApps(props);
+  return apps?.find(a => a.name === name);
 }
 
 export function table<T extends ColumnSchema>(props: TableProps<T>) {

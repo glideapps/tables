@@ -1,9 +1,13 @@
+require("dotenv").config();
+
 import * as glide from ".";
 import type { RowOf } from ".";
 
+const token = process.env.GLIDE_TOKEN!;
+
 const app = glide.app({
   id: "bAFxpGXU1bHiBgUMcDgn",
-  token: process.env.GLIDE_TOKEN,
+  token,
 });
 
 const inventory = app.table({
@@ -23,6 +27,30 @@ const inventoryStaging = glide.table({
   columns: {
     Name: "string",
   },
+});
+
+describe("app", () => {
+  it("can get apps", async () => {
+    const apps = await glide.getApps();
+    expect(apps).toBeDefined();
+    expect(apps?.length).toBeGreaterThan(0);
+  });
+
+  it("can get an app by name", async () => {
+    const app = await glide.getAppNamed("API Testing");
+    expect(app).toBeDefined();
+  });
+
+  it("can get tables", async () => {
+    const tables = await app.getTables();
+    expect(tables).toBeDefined();
+    expect(tables?.length).toBeGreaterThan(0);
+  });
+
+  it("can get a table by name", async () => {
+    const table = await app.getTableNamed("Inv - Inventory");
+    expect(table).toBeDefined();
+  });
 });
 
 describe("table", () => {
@@ -100,5 +128,12 @@ describe("table", () => {
 
     const renamed = await inventory.getRow(rowID);
     expect(renamed?.Item).toBe("Renamed");
+  });
+
+  it("can get schema", async () => {
+    const {
+      data: { columns },
+    } = await inventory.getSchema();
+    expect(columns).toBeTruthy();
   });
 });
