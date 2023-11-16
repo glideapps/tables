@@ -61,4 +61,5 @@ export interface AppProps {
   id: string;
   token?: string;
   endpoint?: string;
+  name?: string;
 }

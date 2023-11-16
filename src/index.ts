@@ -5,6 +5,8 @@ import fetch from "cross-fetch";
 
 type RowIdentifiable<T extends ColumnSchema> = RowID | FullRow<T>;
 
+type IDName = { id: string; name: string };
+
 function rowID(row: RowIdentifiable<any>): RowID {
   return typeof row === "string" ? row : row.$rowID;
 }
@@ -215,6 +217,10 @@ class Table<T extends ColumnSchema> {
 class App {
   private client: Client;
 
+  public get name() {
+    return this.props.name;
+  }
+
   constructor(private props: AppProps) {
     this.client = makeClient({
       token: process.env.GLIDE_TOKEN!,
@@ -232,7 +238,7 @@ class App {
 
     if (result.status !== 200) return undefined;
 
-    const { data: tables }: { data: Array<{ id: string; name: string }> } = await result.json();
+    const { data: tables }: { data: IDName[] } = await result.json();
     return tables.map(t => this.table({ table: t.id, name: t.name, columns: {} }));
   }
 
@@ -246,8 +252,27 @@ class App {
   }
 }
 
-export function app(props: AppProps): App {
+export function app(props: AppProps | string): App {
+  if (typeof props === "string") {
+    props = { id: props };
+  }
   return new App(props);
+}
+
+export async function getApps(props: { token?: string } = {}): Promise<App[] | undefined> {
+  const client = makeClient(props);
+  const response = await client.get(`/apps`);
+  if (response.status !== 200) return undefined;
+  const { data: apps }: { data: IDName[] } = await response.json();
+  return apps.map(idName => app({ ...props, ...idName }));
+}
+
+export async function getAppNamed(
+  name: string,
+  props: { token?: string } = {}
+): Promise<App | undefined> {
+  const apps = await getApps(props);
+  return apps?.find(a => a.name === name);
 }
 
 export function table<T extends ColumnSchema>(props: TableProps<T>) {

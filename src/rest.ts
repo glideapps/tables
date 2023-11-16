@@ -1,6 +1,6 @@
 import fetch from "cross-fetch";
 
-export function makeClient({ token }: { token: string }) {
+export function makeClient({ token = process.env.GLIDE_TOKEN! }: { token?: string } = {}) {
   return {
     get(route: string, r: RequestInit = {}) {
       return fetch(`https://functions.prod.internal.glideapps.com/api${route}`, {
