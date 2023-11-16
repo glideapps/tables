@@ -1,6 +1,23 @@
 # Glide Tables Client
 
-## Usage
+## Apps
+
+```ts
+import * as glide from "@glideapps/tables";
+
+const myApp = glide.app({
+  token: process.env.GLIDE_TOKEN,
+  id: "bAFxpGXU1bHiBgUMcDgn",
+});
+
+// Get all tables
+const tables = await myApp.getTables();
+
+// Get a table by name
+const users = await myApp.getTableNamed("Users);
+```
+
+## Tables
 
 ```ts
 import * as glide from "@glideapps/tables";
