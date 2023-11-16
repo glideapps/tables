@@ -42,6 +42,9 @@ await inventory.setRow(rowID, {
 
 // Delete a row
 await inventory.deleteRow(rowID);
+
+// Get table schema info (columns and their types)
+const schema = await inventory.getSchema();
 ```
 
 ### Staging
