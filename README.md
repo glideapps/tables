@@ -2,14 +2,14 @@
 
 ## Authorization
 
-Set `GLIDE_TOKEN` environment variable to your Glide token, or pass the token inline as props.
+Set `GLIDE_TOKEN` environment variable or pass the token as props.
 
 ## Apps
 
 ```ts
 import * as glide from "@glideapps/tables";
 
-// Create an app with its ID
+// Create a reference to an app using its ID
 const myApp = glide.app("bAFxpGXU1bHiBgUMcDgn");
 
 // Or get by name
