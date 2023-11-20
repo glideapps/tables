@@ -53,13 +53,9 @@ class Table<T extends ColumnSchema> {
   }
 
   constructor(props: TableProps<T>) {
-    this.props = {
-      ...props,
-      token: props.token ?? process.env.GLIDE_TOKEN,
-    };
-    this.client = makeClient({
-      token: process.env.GLIDE_TOKEN!,
-    });
+    const token = props.token ?? process.env.GLIDE_TOKEN!;
+    this.props = { ...props, token };
+    this.client = makeClient({ token });
   }
 
   private renameOutgoing(rows: Row<T>[]): Row<T>[] {
@@ -301,10 +297,9 @@ class App {
   }
 
   constructor(props: AppProps) {
-    this.props = { ...props, token: props.token ?? process.env.GLIDE_TOKEN! };
-    this.client = makeClient({
-      token: process.env.GLIDE_TOKEN!,
-    });
+    const token = props.token ?? process.env.GLIDE_TOKEN!;
+    this.props = { ...props, token };
+    this.client = makeClient({ token });
   }
 
   /**
