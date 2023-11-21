@@ -245,8 +245,11 @@ class Table<T extends ColumnSchema> {
    *
    * @returns A promise that resolves to an array of full rows from the table.
    */
-  public async getRows(): Promise<FullRow<T>[]> {
+  public async getRows(
+    props: { startAt?: string } = {}
+  ): Promise<{ rows: FullRow<T>[]; next: string | undefined }> {
     const { token, app, table } = this.props;
+    const { startAt } = props;
 
     const response = await fetch(this.endpoint("/queryTables"), {
       method: "POST",
@@ -257,6 +260,7 @@ class Table<T extends ColumnSchema> {
       body: JSON.stringify({
         appID: app,
         queries: [{ tableName: table }],
+        startAt,
       }),
     });
 
@@ -270,7 +274,8 @@ class Table<T extends ColumnSchema> {
     }
 
     const [result] = await response.json();
-    return this.renameIncoming(result.rows);
+    const rows = this.renameIncoming(result.rows);
+    return { rows, next: result.next };
   }
 
   /**
@@ -279,8 +284,14 @@ class Table<T extends ColumnSchema> {
    * @returns A promise that resolves to the row if found, or undefined.
    */
   public async getRow(id: RowID): Promise<FullRow<T> | undefined> {
-    const rows = await this.getRows();
-    return rows.find(r => rowID(r) === id);
+    let startAt: string | undefined;
+    do {
+      const { rows, next } = await this.getRows({ startAt });
+      const found = rows.find(r => rowID(r) === id);
+      if (found !== undefined) return found;
+      startAt = next;
+    } while (startAt !== undefined);
+    return undefined;
   }
 }
 
