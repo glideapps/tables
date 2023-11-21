@@ -247,30 +247,38 @@ class Table<T extends ColumnSchema> {
    */
   public async getRows(): Promise<FullRow<T>[]> {
     const { token, app, table } = this.props;
+    let startAt: string | undefined;
+    let rows: FullRow<T>[] = [];
 
-    const response = await fetch(this.endpoint("/queryTables"), {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({
-        appID: app,
-        queries: [{ tableName: table }],
-      }),
-    });
+    do {
+      const response = await fetch(this.endpoint("/queryTables"), {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          appID: app,
+          queries: [{ tableName: table }],
+          startAt,
+        }),
+      });
 
-    if (!response.ok) {
-      throw new Error(
-        `Failed to get rows: ${response.status} ${response.statusText} ${JSON.stringify({
-          app,
-          table,
-        })}`
-      );
-    }
+      if (!response.ok) {
+        throw new Error(
+          `Failed to get rows: ${response.status} ${response.statusText} ${JSON.stringify({
+            app,
+            table,
+          })}`
+        );
+      }
 
-    const [result] = await response.json();
-    return this.renameIncoming(result.rows);
+      const [result] = await response.json();
+      rows = rows.concat(this.renameIncoming(result.rows));
+      startAt = result.next;
+    } while (startAt !== undefined);
+
+    return rows;
   }
 
   /**
