@@ -245,37 +245,40 @@ class Table<T extends ColumnSchema> {
    *
    * @returns A promise that resolves to an array of full rows from the table.
    */
-  public async getRows(
-    props: { startAt?: string } = {}
-  ): Promise<{ rows: FullRow<T>[]; next: string | undefined }> {
+  public async getRows(): Promise<FullRow<T>[]> {
     const { token, app, table } = this.props;
-    const { startAt } = props;
+    let startAt: string | undefined;
+    let rows: FullRow<T>[] = [];
 
-    const response = await fetch(this.endpoint("/queryTables"), {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({
-        appID: app,
-        queries: [{ tableName: table }],
-        startAt,
-      }),
-    });
+    do {
+      const response = await fetch(this.endpoint("/queryTables"), {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          appID: app,
+          queries: [{ tableName: table }],
+          startAt,
+        }),
+      });
 
-    if (!response.ok) {
-      throw new Error(
-        `Failed to get rows: ${response.status} ${response.statusText} ${JSON.stringify({
-          app,
-          table,
-        })}`
-      );
-    }
+      if (!response.ok) {
+        throw new Error(
+          `Failed to get rows: ${response.status} ${response.statusText} ${JSON.stringify({
+            app,
+            table,
+          })}`
+        );
+      }
 
-    const [result] = await response.json();
-    const rows = this.renameIncoming(result.rows);
-    return { rows, next: result.next };
+      const [result] = await response.json();
+      rows = rows.concat(this.renameIncoming(result.rows));
+      startAt = result.next;
+    } while (startAt !== undefined);
+
+    return rows;
   }
 
   /**
@@ -284,14 +287,8 @@ class Table<T extends ColumnSchema> {
    * @returns A promise that resolves to the row if found, or undefined.
    */
   public async getRow(id: RowID): Promise<FullRow<T> | undefined> {
-    let startAt: string | undefined;
-    do {
-      const { rows, next } = await this.getRows({ startAt });
-      const found = rows.find(r => rowID(r) === id);
-      if (found !== undefined) return found;
-      startAt = next;
-    } while (startAt !== undefined);
-    return undefined;
+    const rows = await this.getRows();
+    return rows.find(r => rowID(r) === id);
   }
 }
 
