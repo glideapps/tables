@@ -17,8 +17,6 @@ export type ColumnSchemaEntry = { type: ColumnType; name?: string };
 
 export type ColumnSchema = Record<string, ColumnType | ColumnSchemaEntry>;
 
-export { Query } from "./query";
-
 type Pretty<T> = { [K in keyof T]: T[K] } & {};
 
 type ColumnTypeToType<T extends ColumnType> = T extends ColumnStringType
@@ -64,4 +62,64 @@ export interface AppProps {
   token?: string;
   endpoint?: string;
   name?: string;
+}
+
+export type Operator = "<" | "<=" | "=" | "!=" | ">=" | ">";
+export type IsNull = "IS NULL" | "IS NOT NULL";
+
+export type Order = "ASC" | "DESC";
+
+type ValuePredicate<TRow> = {
+  column: keyof TRow;
+  compare: Operator;
+  other: keyof TRow | string | number;
+};
+
+type NullPredicate<TRow> = {
+  column: keyof TRow;
+  compare: IsNull;
+};
+
+export type Predicate<TRow> = ValuePredicate<TRow> | NullPredicate<TRow>;
+
+export interface ToSQL {
+  toSQL(): string;
+}
+
+export interface Query<TRow, TOmit extends string = ""> extends ToSQL {
+  orderBy(
+    column: keyof TRow,
+    order?: Order
+  ): Omit<Query<TRow, TOmit | "orderBy">, TOmit | "orderBy">;
+
+  where(
+    column: keyof TRow,
+    compare: Operator,
+    other: keyof TRow | string | number
+  ): Omit<QueryAnd<TRow, TOmit | "where"> & QueryOr<TRow, TOmit | "where">, TOmit | "where">;
+
+  where(
+    column: keyof TRow,
+    compare: IsNull
+  ): Omit<QueryAnd<TRow, TOmit | "where"> & QueryOr<TRow, TOmit | "where">, TOmit | "where">;
+
+  limit(n: number): Omit<Query<TRow, TOmit | "limit">, TOmit | "limit">;
+}
+
+export interface QueryAnd<TRow, TOmit extends string> extends Query<TRow, TOmit> {
+  and(
+    column: keyof TRow,
+    compare: Operator,
+    other: keyof TRow | string | number
+  ): Omit<QueryAnd<TRow, TOmit>, TOmit>;
+  and(column: keyof TRow, compare: IsNull): Omit<QueryAnd<TRow, TOmit>, TOmit>;
+}
+
+export interface QueryOr<TRow, TOmit extends string> extends Query<TRow, TOmit> {
+  or(
+    column: keyof TRow,
+    compare: Operator,
+    other: keyof TRow | string | number
+  ): Omit<QueryOr<TRow, TOmit>, TOmit>;
+  or(column: keyof TRow, compare: IsNull): Omit<QueryOr<TRow, TOmit>, TOmit>;
 }

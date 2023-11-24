@@ -1,4 +1,5 @@
-import { QueryBuilder, ToSQL } from "./query";
+import { ToSQL } from "./query";
+import { QueryBuilder } from "./QueryBuilder";
 import { Client, makeClient } from "./rest";
 import type { TableProps, Row, ColumnSchema, RowID, FullRow, AppProps, Query } from "./types";
 

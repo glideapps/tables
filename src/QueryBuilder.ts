@@ -1,20 +1,4 @@
-type Operator = "<" | "<=" | "=" | "!=" | ">=" | ">";
-type IsNull = "IS NULL" | "IS NOT NULL";
-
-type Order = "ASC" | "DESC";
-
-type ValuePredicate<TRow> = {
-  column: keyof TRow;
-  compare: Operator;
-  other: keyof TRow | string | number;
-};
-
-type NullPredicate<TRow> = {
-  column: keyof TRow;
-  compare: IsNull;
-};
-
-type Predicate<TRow> = ValuePredicate<TRow> | NullPredicate<TRow>;
+import { Query, QueryAnd, QueryOr, Order, Predicate, Operator, IsNull } from "./types";
 
 function predicateToSQL<TRow>(
   predicate: Predicate<TRow>,
@@ -34,48 +18,6 @@ function predicateToSQL<TRow>(
     }
   }
   return `"${resolveName(column)}" ${compare}`;
-}
-
-export interface ToSQL {
-  toSQL(): string;
-}
-
-export interface Query<TRow, TOmit extends string = ""> extends ToSQL {
-  orderBy(
-    column: keyof TRow,
-    order?: Order
-  ): Omit<Query<TRow, TOmit | "orderBy">, TOmit | "orderBy">;
-
-  where(
-    column: keyof TRow,
-    compare: Operator,
-    other: keyof TRow | string | number
-  ): Omit<QueryAnd<TRow, TOmit | "where"> & QueryOr<TRow, TOmit | "where">, TOmit | "where">;
-
-  where(
-    column: keyof TRow,
-    compare: IsNull
-  ): Omit<QueryAnd<TRow, TOmit | "where"> & QueryOr<TRow, TOmit | "where">, TOmit | "where">;
-
-  limit(n: number): Omit<Query<TRow, TOmit | "limit">, TOmit | "limit">;
-}
-
-interface QueryAnd<TRow, TOmit extends string> extends Query<TRow, TOmit> {
-  and(
-    column: keyof TRow,
-    compare: Operator,
-    other: keyof TRow | string | number
-  ): Omit<QueryAnd<TRow, TOmit>, TOmit>;
-  and(column: keyof TRow, compare: IsNull): Omit<QueryAnd<TRow, TOmit>, TOmit>;
-}
-
-interface QueryOr<TRow, TOmit extends string> extends Query<TRow, TOmit> {
-  or(
-    column: keyof TRow,
-    compare: Operator,
-    other: keyof TRow | string | number
-  ): Omit<QueryOr<TRow, TOmit>, TOmit>;
-  or(column: keyof TRow, compare: IsNull): Omit<QueryOr<TRow, TOmit>, TOmit>;
 }
 
 export class QueryBuilder<TRow, TOmit extends string>
