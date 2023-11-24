@@ -92,30 +92,26 @@ export class QueryBuilder<TRow, TOmit extends string = "">
 
   public toSQL(): string {
     const { table, displayNameToName } = this.props;
-    let q = `SELECT * FROM "${table}"`;
+    let sql = `SELECT * FROM "${table}"`;
 
-    const predicates = [
-      ...(this._where === undefined ? [] : [this._where]),
-      ...this._and,
-      ...this._or,
-    ];
-
+    const predicates = this._where === undefined ? [] : [this._where, ...this._and, ...this._or];
     if (predicates.length > 0) {
-      q += ` WHERE `;
+      sql += ` WHERE `;
 
       const AND_OR = this._and.length > 0 ? ` AND ` : ` OR `;
-      q += predicates.map(p => predicateToSQL(p, displayNameToName)).join(AND_OR);
+      sql += predicates.map(p => predicateToSQL(p, displayNameToName)).join(AND_OR);
     }
 
     if (this._orderBy !== undefined) {
       const { column, order = "ASC" } = this._orderBy;
-      q += ` ORDER BY "${displayNameToName(column)}" ${order}`;
+      sql += ` ORDER BY "${displayNameToName(column)}" ${order}`;
     }
 
     if (this._limit !== undefined) {
-      q += ` LIMIT ${this._limit}`;
+      sql += ` LIMIT ${this._limit}`;
     }
-    return q;
+
+    return sql;
   }
 
   orderBy(
