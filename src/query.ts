@@ -37,7 +37,7 @@ function predicateToSQL<TRow>(
 }
 
 export interface ToSQL {
-  toSQL(): string | undefined;
+  toSQL(): string;
 }
 
 export interface Query<TRow, TOmit extends string = ""> extends ToSQL {
@@ -90,7 +90,7 @@ export class QueryBuilder<TRow, TOmit extends string = "">
 
   constructor(private props: { table: string; displayNameToName(name: keyof TRow): string }) {}
 
-  public toSQL(): string | undefined {
+  public toSQL(): string {
     const { table, displayNameToName } = this.props;
     let q = `SELECT * FROM "${table}"`;
 

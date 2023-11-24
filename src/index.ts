@@ -256,12 +256,12 @@ class Table<T extends ColumnSchema> {
     let startAt: string | undefined;
     let rows: FullRow<T>[] = [];
 
-    const builder = new QueryBuilder({
-      table,
-      displayNameToName: name => this.displayNameToName[name],
-    });
-
-    const queryData = { tableName: table, sql: query?.(builder).toSQL() };
+    const sql = query?.(
+      new QueryBuilder({
+        table,
+        displayNameToName: name => this.displayNameToName[name],
+      })
+    ).toSQL();
 
     do {
       const response = await fetch(this.endpoint("/queryTables"), {
@@ -272,7 +272,7 @@ class Table<T extends ColumnSchema> {
         },
         body: JSON.stringify({
           appID: app,
-          queries: [queryData],
+          queries: [{ tableName: table, sql }],
           startAt,
         }),
       });
