@@ -26,7 +26,7 @@ class Table<T extends ColumnSchema> {
 
   private client: Client;
 
-  private displayNameToName: Record<keyof T, string>;
+  private displayNameToName: Record<keyof FullRow<T>, string>;
 
   /**
    * @returns The app id.
@@ -70,6 +70,7 @@ class Table<T extends ColumnSchema> {
           : [displayName, displayName]
       )
     ) as Record<keyof T, string>;
+    this.displayNameToName["$rowID"] = "$rowID";
   }
 
   private renameOutgoing(rows: Row<T>[]): Row<T>[] {
@@ -251,7 +252,7 @@ class Table<T extends ColumnSchema> {
    * @param query Big Tables only. A query to filter the rows by.
    * @returns A promise that resolves to an array of full rows from the table.
    */
-  public async getRows(query?: (q: Query<Row<T>>) => ToSQL): Promise<FullRow<T>[]> {
+  public async getRows(query?: (q: Query<FullRow<T>>) => ToSQL): Promise<FullRow<T>[]> {
     const { token, app, table } = this.props;
     let startAt: string | undefined;
     let rows: FullRow<T>[] = [];

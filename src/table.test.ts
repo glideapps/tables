@@ -201,4 +201,9 @@ describe("query", () => {
     expect(rows).toBeDefined();
     expect(rows.length).toBeGreaterThan(0);
   });
+
+  it("can where row ids", async () => {
+    const rows = await table.getRows(q => q.where("$rowID", "=", "Z03p2HBcRxuIuK-5CM8GNQ"));
+    expect(rows.length).toBe(1);
+  });
 });
