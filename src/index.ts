@@ -1,5 +1,15 @@
+import { QueryBuilder } from "./QueryBuilder";
 import { Client, makeClient } from "./rest";
-import type { TableProps, Row, ColumnSchema, RowID, FullRow, AppProps } from "./types";
+import type {
+  TableProps,
+  Row,
+  ColumnSchema,
+  RowID,
+  FullRow,
+  AppProps,
+  Query,
+  ToSQL,
+} from "./types";
 
 import fetch from "cross-fetch";
 
@@ -10,6 +20,8 @@ type IDName = { id: string; name: string };
 function rowID(row: RowIdentifiable<any>): RowID {
   return typeof row === "string" ? row : row.$rowID;
 }
+
+export class NonQueryableTableError extends Error {}
 
 /**
  * Type alias for a row of a given table.
@@ -22,6 +34,8 @@ class Table<T extends ColumnSchema> {
   private props: TableProps<T>;
 
   private client: Client;
+
+  private displayNameToName: Record<keyof FullRow<T>, string>;
 
   /**
    * @returns The app id.
@@ -56,19 +70,20 @@ class Table<T extends ColumnSchema> {
     const token = props.token ?? process.env.GLIDE_TOKEN!;
     this.props = { ...props, token };
     this.client = makeClient({ token });
-  }
 
-  private renameOutgoing(rows: Row<T>[]): Row<T>[] {
-    const { columns } = this.props;
-
-    const rename = Object.fromEntries(
+    const { columns } = props;
+    this.displayNameToName = Object.fromEntries(
       Object.entries(columns).map(([displayName, value]) =>
         typeof value !== "string" && typeof value.name === "string"
           ? [displayName, value.name /* internal name */]
           : [displayName, displayName]
       )
-    );
+    ) as Record<keyof T, string>;
+    this.displayNameToName["$rowID"] = "$rowID";
+  }
 
+  private renameOutgoing(rows: Row<T>[]): Row<T>[] {
+    const rename = this.displayNameToName;
     return rows.map(
       row =>
         Object.fromEntries(
@@ -243,12 +258,20 @@ class Table<T extends ColumnSchema> {
   /**
    * Retrieves all rows from the table. Requires Business or Enterprise.
    *
+   * @param query Big Tables only. A query to filter the rows by.
    * @returns A promise that resolves to an array of full rows from the table.
    */
-  public async getRows(): Promise<FullRow<T>[]> {
+  public async getRows(query?: (q: Query<FullRow<T>>) => ToSQL): Promise<FullRow<T>[]> {
     const { token, app, table } = this.props;
     let startAt: string | undefined;
     let rows: FullRow<T>[] = [];
+
+    const sql = query?.(
+      new QueryBuilder({
+        table,
+        displayNameToName: name => this.displayNameToName[name],
+      })
+    ).toSQL();
 
     do {
       const response = await fetch(this.endpoint("/queryTables"), {
@@ -259,18 +282,17 @@ class Table<T extends ColumnSchema> {
         },
         body: JSON.stringify({
           appID: app,
-          queries: [{ tableName: table }],
+          queries: [{ tableName: table, sql }],
           startAt,
         }),
       });
 
       if (!response.ok) {
-        throw new Error(
-          `Failed to get rows: ${response.status} ${response.statusText} ${JSON.stringify({
-            app,
-            table,
-          })}`
-        );
+        const { message } = await response.json();
+        if (message === "SQL queries only supported for queryable data sources") {
+          throw new NonQueryableTableError(message);
+        }
+        throw new Error(`Error ${response.status}: ${message}`);
       }
 
       const [result] = await response.json();
@@ -287,7 +309,13 @@ class Table<T extends ColumnSchema> {
    * @returns A promise that resolves to the row if found, or undefined.
    */
   public async getRow(id: RowID): Promise<FullRow<T> | undefined> {
-    const rows = await this.getRows();
+    let rows: FullRow<T>[] = [];
+    try {
+      rows = await this.getRows(q => q.where("$rowID", "=", id).limit(1));
+    } catch {
+      // Try again without a query (table is likely not queryable)
+      rows = await this.getRows();
+    }
     return rows.find(r => rowID(r) === id);
   }
 }
