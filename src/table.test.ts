@@ -206,4 +206,9 @@ describe("query", () => {
     const rows = await table.getRows(q => q.where("$rowID", "=", "Z03p2HBcRxuIuK-5CM8GNQ"));
     expect(rows.length).toBe(1);
   });
+
+  it("can get a single row with querying", async () => {
+    const row = await table.getRow("Z03p2HBcRxuIuK-5CM8GNQ");
+    expect(row).toBeDefined();
+  });
 });

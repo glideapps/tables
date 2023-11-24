@@ -300,7 +300,13 @@ class Table<T extends ColumnSchema> {
    * @returns A promise that resolves to the row if found, or undefined.
    */
   public async getRow(id: RowID): Promise<FullRow<T> | undefined> {
-    const rows = await this.getRows();
+    let rows: FullRow<T>[] = [];
+    try {
+      rows = await this.getRows(q => q.where("$rowID", "=", id).limit(1));
+    } catch {
+      // Try again without a query (table is likely not queryable)
+      rows = await this.getRows();
+    }
     return rows.find(r => rowID(r) === id);
   }
 }
