@@ -72,6 +72,20 @@ await inventory.deleteRow(rowID);
 const schema = await inventory.getSchema();
 ```
 
+## Big Tables
+
+Big Tables can be queried.
+
+```ts
+const expensiveInLA = await items.getRows(
+  q => q
+    .orderBy("Price", "DESC")
+    .where("Quantity", ">", 10_000)
+    .and("Port", "=", "Los Angeles")
+    .limit(100);
+);
+```
+
 ## Development
 
 ```shell

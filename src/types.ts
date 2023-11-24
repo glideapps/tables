@@ -17,6 +17,8 @@ export type ColumnSchemaEntry = { type: ColumnType; name?: string };
 
 export type ColumnSchema = Record<string, ColumnType | ColumnSchemaEntry>;
 
+export { Query } from "./query";
+
 type Pretty<T> = { [K in keyof T]: T[K] } & {};
 
 type ColumnTypeToType<T extends ColumnType> = T extends ColumnStringType

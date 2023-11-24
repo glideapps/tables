@@ -3,6 +3,8 @@ require("dotenv").config();
 import * as glide from ".";
 import type { RowOf } from ".";
 
+import _ from "lodash";
+
 const token = process.env.GLIDE_TOKEN!;
 
 const app = glide.app({
@@ -19,13 +21,25 @@ const inventory = app.table({
   },
 });
 
-const inventoryStaging = glide.table({
+const stagingTestApp = glide.app({
   token: process.env.GLIDE_TOKEN_STAGING,
-  app: "xijMuHE11kxVRXoMRzd6",
-  table: "native-table-1PvO9KogUzGdhVvg5gwk",
+  id: "mT91fPcZCWigkZXgSZGJ",
   endpoint: "https://staging.heyglide.com/api/container",
+});
+
+const inventoryStaging = stagingTestApp.table({
+  table: "native-table-MX8xNW5WWoJhW4fwEeN7",
   columns: {
-    Name: "string",
+    name: { type: "string", name: "Name" },
+  },
+});
+
+const bigInventoryStaging = stagingTestApp.table({
+  table: "native-table-9500db9c-fa75-4968-82e3-9d53437893e8",
+  columns: {
+    name: { type: "string", name: "Name" },
+    age: { type: "number", name: "wLP5Z" },
+    otherName: { type: "string", name: "vnmf7" },
   },
 });
 
@@ -135,5 +149,56 @@ describe("table", () => {
       data: { columns },
     } = await inventory.getSchema();
     expect(columns).toBeTruthy();
+  });
+});
+
+describe("query", () => {
+  const table = bigInventoryStaging;
+
+  it("can limit", async () => {
+    const rows = await table.getRows(q => q.limit(1));
+    expect(rows).toBeDefined();
+    expect(rows.length).toBe(1);
+  });
+
+  it("can orderBy", async () => {
+    const rows = await table.getRows(q => q.orderBy("name"));
+    expect(rows).toBeDefined();
+
+    const names = rows.map(r => r.name);
+    expect(names).toEqual(_.sortBy(names));
+  });
+
+  it("can orderBy DESC", async () => {
+    const rows = await table.getRows(q => q.orderBy("name", "DESC"));
+    expect(rows).toBeDefined();
+
+    const names = rows.map(r => r.name);
+    expect(names).toEqual(_.sortBy(names).reverse());
+  });
+
+  it("can where", async () => {
+    const rows = await table.getRows(q => q.where("name", "=", "David"));
+    expect(rows).toBeDefined();
+    expect(rows.length).toBeGreaterThan(0);
+  });
+
+  it("can compare columns", async () => {
+    const rows = await table.getRows(q => q.where("name", "=", "otherName"));
+    expect(rows).toBeDefined();
+  });
+
+  it("can where and", async () => {
+    const rows = await table.getRows(q => q.where("name", "=", "David").and("age", ">", 100));
+    expect(rows).toBeDefined();
+    expect(rows.length).toBeGreaterThan(0);
+  });
+
+  it("can where and order limit", async () => {
+    const rows = await table.getRows(q =>
+      q.where("name", "=", "David").and("age", ">", 100).orderBy("name").limit(1)
+    );
+    expect(rows).toBeDefined();
+    expect(rows.length).toBeGreaterThan(0);
   });
 });
