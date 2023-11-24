@@ -248,7 +248,7 @@ class Table<T extends ColumnSchema> {
   /**
    * Retrieves all rows from the table. Requires Business or Enterprise.
    *
-   * @param query Used to build a query. Only works with Big Tables.
+   * @param query Big Tables only. A query to filter the rows by.
    * @returns A promise that resolves to an array of full rows from the table.
    */
   public async getRows(query?: (q: Query<Row<T>>) => ToSQL): Promise<FullRow<T>[]> {
