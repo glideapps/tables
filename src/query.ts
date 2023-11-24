@@ -21,7 +21,7 @@ function predicateToSQL<TRow>(
   resolveName: (key: keyof TRow) => string
 ): string {
   if ("other" in predicate) {
-    // TODO this is a bit too tricky. If the RHS, we treat it as such. Otherwise we use it bare.
+    // TODO this is a bit too tricky. If the RHS matches a column name, we treat it as such. Otherwise we use it bare.
     const otherIsColumn = resolveName(predicate.other as keyof TRow) !== undefined;
     if (otherIsColumn) {
       return `"${resolveName(predicate.column)}" ${predicate.compare} "${resolveName(
