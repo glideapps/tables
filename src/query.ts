@@ -20,20 +20,20 @@ function predicateToSQL<TRow>(
   predicate: Predicate<TRow>,
   resolveName: (key: keyof TRow) => string
 ): string {
+  const { column, compare } = predicate;
+
   if ("other" in predicate) {
+    const { other } = predicate;
     // TODO this is a bit too tricky. If the RHS matches a column name, we treat it as such. Otherwise we use it bare.
-    const otherIsColumn = resolveName(predicate.other as keyof TRow) !== undefined;
-    if (otherIsColumn) {
-      return `"${resolveName(predicate.column)}" ${predicate.compare} "${resolveName(
-        predicate.other as keyof TRow
-      )}"`;
+    const otherColumn = resolveName(other as keyof TRow);
+    if (otherColumn !== undefined) {
+      return `"${resolveName(column)}" ${compare} "${otherColumn}"`;
     } else {
-      const bareValue =
-        typeof predicate.other === "string" ? `'${predicate.other}'` : predicate.other;
-      return `"${resolveName(predicate.column)}" ${predicate.compare} ${String(bareValue)}`;
+      const bareValue = typeof other === "string" ? `'${other}'` : other;
+      return `"${resolveName(column)}" ${compare} ${String(bareValue)}`;
     }
   }
-  return `"${resolveName(predicate.column)}" ${predicate.compare}`;
+  return `"${resolveName(column)}" ${compare}`;
 }
 
 export interface ToSQL {
