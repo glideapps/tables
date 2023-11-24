@@ -60,7 +60,7 @@ export interface Query<TRow, TOmit extends string = ""> extends ToSQL {
   limit(n: number): Omit<Query<TRow, TOmit | "limit">, TOmit | "limit">;
 }
 
-interface QueryAnd<TRow, TOmit extends string = ""> extends Query<TRow, TOmit> {
+interface QueryAnd<TRow, TOmit extends string> extends Query<TRow, TOmit> {
   and(
     column: keyof TRow,
     compare: Operator,
@@ -69,7 +69,7 @@ interface QueryAnd<TRow, TOmit extends string = ""> extends Query<TRow, TOmit> {
   and(column: keyof TRow, compare: IsNull): Omit<QueryAnd<TRow, TOmit>, TOmit>;
 }
 
-interface QueryOr<TRow, TOmit extends string = ""> extends Query<TRow, TOmit> {
+interface QueryOr<TRow, TOmit extends string> extends Query<TRow, TOmit> {
   or(
     column: keyof TRow,
     compare: Operator,
@@ -78,7 +78,7 @@ interface QueryOr<TRow, TOmit extends string = ""> extends Query<TRow, TOmit> {
   or(column: keyof TRow, compare: IsNull): Omit<QueryOr<TRow, TOmit>, TOmit>;
 }
 
-export class QueryBuilder<TRow, TOmit extends string = "">
+export class QueryBuilder<TRow, TOmit extends string>
   implements Query<TRow, TOmit>, QueryAnd<TRow, TOmit>, QueryOr<TRow, TOmit>
 {
   private _limit: number | undefined;
