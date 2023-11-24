@@ -64,7 +64,7 @@ export class QueryBuilder<TRow, TOmit extends string>
     return this as any;
   }
 
-  limit(n: number) {
+  limit(n: number): Omit<Query<TRow, TOmit | "limit">, TOmit | "limit"> {
     this._limit = n;
     return this as any;
   }
