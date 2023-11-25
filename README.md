@@ -1,5 +1,19 @@
 # Glide Tables Client
 
+## Setup
+
+Install package:
+
+```shell
+npm install @glideapps/tables
+```
+
+Import it:
+
+```ts
+import * as glide from "@glideapps/tables";
+```
+
 ## Authorization
 
 Set `GLIDE_TOKEN` environment variable or pass the token as props.
@@ -7,8 +21,6 @@ Set `GLIDE_TOKEN` environment variable or pass the token as props.
 ## Apps
 
 ```ts
-import * as glide from "@glideapps/tables";
-
 // List all apps
 const apps = await glide.getApps();
 
@@ -28,8 +40,6 @@ const users = await myApp.getTableNamed("Users");
 ## Tables
 
 ```ts
-import * as glide from "@glideapps/tables";
-
 const inventory = glide.table({
   // App and table IDs
   app: "bAF...Dgn",
