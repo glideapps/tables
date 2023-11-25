@@ -46,11 +46,13 @@ const inventory = glide.table({
   table: "native-table-tei...",
 
   columns: {
-    // Column names map to their types
+    // Column names map to their types.
+    // You can use this shorthand with internal names only.
     Item: "string",
     Price: "number",
 
-    // Alias internal names
+    // When you want to work with display names, you'll need
+    // to alias them like this.
     Assignee: { type: "string", name: "7E42F8B3-9988-436E-84D2-5B3B0B22B21F" },
   },
 });
@@ -58,8 +60,11 @@ const inventory = glide.table({
 // Name the row type (optional)
 type InventoryItem = glide.RowOf<typeof inventory>;
 
-// Get all rows.
+// Get all rows (Business+)
 const rows = await inventory.get();
+
+// Query rows – Big Tables only (Business+)
+const rows = await inventory.get(p => p.where("Price", ">", 100));
 
 // Add a row
 const rowID = await inventory.add({
@@ -68,6 +73,9 @@ const rowID = await inventory.add({
   Price: 100,
   Assignee: "David",
 });
+
+// Add many rows
+await inventory.add([jacket, shirt, shoes]);
 
 // Change a row
 await inventory.patch(rowID, {
@@ -80,7 +88,7 @@ await inventory.patch(rowID, {
 // Delete a row
 await inventory.delete(rowID);
 
-// Clear entire table
+// Clear all rows (Business+)
 await inventory.clear();
 ```
 
@@ -91,9 +99,9 @@ await inventory.clear();
 const schema = await inventory.getSchema();
 ```
 
-## Big Tables
+## Queries
 
-Big Tables can be queried.
+Big Tables can be queried using SQL.
 
 ```ts
 const first10 = await items.get(q => q.limit(10));
