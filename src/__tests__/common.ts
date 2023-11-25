@@ -5,11 +5,13 @@ import * as glide from "..";
 import _ from "lodash";
 
 export const staging = "https://functions.staging.internal.glideapps.com/api";
+export const token = process.env.GLIDE_TOKEN_STAGING!;
 
 export const app = glide.app({
   id: "mT91fPcZCWigkZXgSZGJ",
   endpoint: "https://staging.heyglide.com/api/container",
   endpointREST: staging,
+  token,
 });
 
 export const table = app.table({

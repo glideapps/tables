@@ -3,16 +3,16 @@ require("dotenv").config();
 import * as glide from "..";
 
 import _ from "lodash";
-import { app, staging } from "./common";
+import { app, staging, token } from "./common";
 
 describe("app", () => {
   it("can get apps", async () => {
-    const apps = await glide.getApps({ endpoint: staging });
+    const apps = await glide.getApps({ endpoint: staging, token });
     expect(apps?.length).toBeGreaterThan(0);
   });
 
   it("can get an app by name", async () => {
-    const app = await glide.getAppNamed("API Testing", { endpoint: staging });
+    const app = await glide.getAppNamed("API Testing", { endpoint: staging, token });
     expect(app).toBeDefined();
   });
 
