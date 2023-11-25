@@ -172,16 +172,30 @@ export class Table<T extends ColumnSchema> {
     return this.add(row);
   }
 
-  /**
-   * Updates multiple rows in the table.
-   *
-   * @param rows An array of objects, each containing an id and a row to update in the table.
-   * @returns A promise that resolves when the rows have been updated.
-   */
-  async setRows(rows: { id: RowIdentifiable<T>; row: Row<T> }[]): Promise<void> {
+  public async patch(id: RowID, row: Row<T>): Promise<void>;
+  public async patch(row: FullRow<T>): Promise<void>;
+  public async patch(rows: FullRow<T>[]): Promise<void>;
+  public async patch(rows: Record<RowID, Row<T>>): Promise<void>;
+  async patch(
+    rows: RowID | FullRow<T> | FullRow<T>[] | Record<RowID, Row<T>>,
+    row?: Row<T>
+  ): Promise<void> {
+    const updates: Record<RowID, Row<T>> = {};
+    if (typeof rows === "string") {
+      updates[rows] = row as Row<T>;
+    } else if ("$rowID" in rows) {
+      updates[rows.$rowID as RowID] = rows as Row<T>;
+    } else if (Array.isArray(rows)) {
+      for (const row of rows) {
+        updates[row.$rowID] = row as Row<T>;
+      }
+    } else {
+      Object.assign(updates, rows);
+    }
+
     const { token, app, table } = this.props;
 
-    await chunked(rows, MAX_MUTATIONS, async chunk => {
+    await chunked(Object.entries(updates), MAX_MUTATIONS, async chunk => {
       await fetch(this.endpoint("/mutateTables"), {
         method: "POST",
         headers: {
@@ -190,7 +204,7 @@ export class Table<T extends ColumnSchema> {
         },
         body: JSON.stringify({
           appID: app,
-          mutations: chunk.map(({ id, row }) => {
+          mutations: chunk.map(([id, row]) => {
             return {
               kind: "set-columns-in-row",
               tableName: table,
@@ -206,12 +220,14 @@ export class Table<T extends ColumnSchema> {
   /**
    * Sets values in a single row in the table.
    *
+   * @deprecated Use `patch` instead.
+   *
    * @param id The ID of the row to set.
    * @param row The row data to set.
    * @returns A promise that resolves when the row has been set.
    */
   public async setRow(id: RowIdentifiable<T>, row: Row<T>): Promise<void> {
-    return await this.setRows([{ id, row }]);
+    return this.patch(rowID(id), row);
   }
 
   /**

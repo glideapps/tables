@@ -46,7 +46,7 @@ describe("table", () => {
 
     expect(rowID).toBeDefined();
 
-    await table.setRow(rowID, { name: "Renamed" });
+    await table.patch(rowID, { name: "Renamed" });
 
     // wait to allow the row to be updated
     await new Promise(resolve => setTimeout(resolve, 5_000));

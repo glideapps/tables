@@ -59,10 +59,10 @@ const inventory = glide.table({
 type InventoryItem = glide.RowOf<typeof inventory>;
 
 // Get all rows.
-const rows = await inventory.getRows();
+const rows = await inventory.get();
 
 // Add a row
-const rowID = await inventory.addRow({
+const rowID = await inventory.add({
   Item: "Test Item",
   Description: "Test Description",
   Price: 100,
@@ -70,12 +70,12 @@ const rowID = await inventory.addRow({
 });
 
 // Change a row
-await inventory.setRow(rowID, {
+await inventory.patch(rowID, {
   Price: 200,
 });
 
 // Delete a row
-await inventory.deleteRow(rowID);
+await inventory.delete(rowID);
 
 // Clear entire table
 await inventory.clear();
@@ -93,11 +93,11 @@ const schema = await inventory.getSchema();
 Big Tables can be queried.
 
 ```ts
-const first10 = await items.getRows(q => q.limit(10));
+const first10 = await items.get(q => q.limit(10));
 
-const cheapest = await items.getRows(q => q.orderBy("Price"));
+const cheapest = await items.get(q => q.orderBy("Price"));
 
-const expensiveInLA = await items.getRows(
+const expensiveInLA = await items.get(
   q => q
     .orderBy("Price", "DESC")
     .where("Quantity", ">", 10_000)
