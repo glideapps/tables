@@ -8,12 +8,12 @@ describe("table", () => {
   jest.setTimeout(60_000);
 
   it("can get rows", async () => {
-    const rows = await table.getRows();
+    const rows = await table.get();
     expect(rows).toBeDefined();
   });
 
   it("can get more than 10k rows", async () => {
-    const rows = await bigBigTable.getRows();
+    const rows = await bigBigTable.get();
     expect(rows.length).toBeGreaterThan(10_000);
   });
 
@@ -24,25 +24,25 @@ describe("table", () => {
   });
 
   it("can add a row", async () => {
-    const rowID = await table.addRow({
+    const rowID = await table.add({
       name: "Test Item",
       renamed: "Test Description",
       stock: 100,
     });
     expect(rowID).toBeDefined();
 
-    await table.deleteRow(rowID);
+    await table.delete(rowID);
   });
 
   it("can add multiple rows", async () => {
-    const rowIDs = await table.addRows([{}, {}]);
+    const rowIDs = await table.add([{}, {}]);
     expect(rowIDs.length).toBe(2);
 
-    await table.deleteRows(rowIDs);
+    await table.delete(rowIDs);
   });
 
   it("can add then change a row", async () => {
-    const rowID = await table.addRow({});
+    const rowID = await table.add({});
 
     expect(rowID).toBeDefined();
 
@@ -51,10 +51,10 @@ describe("table", () => {
     // wait to allow the row to be updated
     await new Promise(resolve => setTimeout(resolve, 5_000));
 
-    const renamed = await table.getRow(rowID);
+    const renamed = await table.get(rowID);
     expect(renamed?.name).toBe("Renamed");
 
-    await table.deleteRow(rowID);
+    await table.delete(rowID);
   });
 
   it("can get schema", async () => {
