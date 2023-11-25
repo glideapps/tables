@@ -45,12 +45,24 @@ export type Row<T extends ColumnSchema> = Pretty<
   }>
 >;
 
+export type NullableRow<T extends ColumnSchema> = Pretty<
+  Partial<{
+    [K in keyof T]: null | ColumnTypeOrSchemaEntryToType<T[K]>;
+  }>
+>;
+
 export type RowID = string;
 
 export type FullRow<T extends ColumnSchema> = Pretty<
   {
     $rowID: RowID;
   } & Row<T>
+>;
+
+export type NullableFullRow<T extends ColumnSchema> = Pretty<
+  {
+    $rowID: RowID;
+  } & NullableRow<T>
 >;
 
 interface Props {

@@ -10,6 +10,8 @@ import {
   type ToSQL,
   NonQueryableTableError,
   RowIdentifiable,
+  NullableRow,
+  NullableFullRow,
 } from "./types";
 import fetch from "cross-fetch";
 import { defaultEndpointREST, defaultEndpoint, MAX_MUTATIONS } from "./constants";
@@ -93,13 +95,17 @@ export class Table<T extends ColumnSchema> {
     return `${base}${path}`;
   }
 
-  private renameOutgoing(rows: Row<T>[]): Row<T>[] {
+  private renameOutgoing(rows: NullableRow<T>[]): NullableRow<T>[] {
     const rename = this.displayNameToName;
     return rows.map(
       row =>
         Object.fromEntries(
-          Object.entries(row).map(([key, value]) => [rename[key] ?? key, value])
-        ) as Row<T>
+          Object.entries(row).map(([key, value]) => [
+            rename[key] ?? key,
+            // null is sent as an empty string
+            value === null ? "" : value,
+          ])
+        ) as NullableRow<T>
     );
   }
 
@@ -172,15 +178,15 @@ export class Table<T extends ColumnSchema> {
     return this.add(row);
   }
 
-  public async patch(id: RowID, row: Row<T>): Promise<void>;
-  public async patch(row: FullRow<T>): Promise<void>;
-  public async patch(rows: FullRow<T>[]): Promise<void>;
-  public async patch(rows: Record<RowID, Row<T>>): Promise<void>;
+  public async patch(id: RowID, row: NullableRow<T>): Promise<void>;
+  public async patch(row: NullableFullRow<T>): Promise<void>;
+  public async patch(rows: NullableFullRow<T>[]): Promise<void>;
+  public async patch(rows: Record<RowID, NullableRow<T>>): Promise<void>;
   async patch(
-    rows: RowID | FullRow<T> | FullRow<T>[] | Record<RowID, Row<T>>,
-    row?: Row<T>
+    rows: RowID | NullableFullRow<T> | NullableFullRow<T>[] | Record<RowID, NullableRow<T>>,
+    row?: NullableRow<T>
   ): Promise<void> {
-    const updates: Record<RowID, Row<T>> = {};
+    const updates: Record<RowID, NullableRow<T>> = {};
     if (typeof rows === "string") {
       updates[rows] = row as Row<T>;
     } else if ("$rowID" in rows) {

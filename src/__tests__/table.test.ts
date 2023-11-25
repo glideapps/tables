@@ -2,7 +2,7 @@ require("dotenv").config();
 
 import type { RowOf } from "..";
 
-import { bigBigTable, table } from "./common";
+import { bigBigTable, table, sleep } from "./common";
 
 describe("table", () => {
   jest.setTimeout(60_000);
@@ -49,10 +49,23 @@ describe("table", () => {
     await table.patch(rowID, { name: "Renamed" });
 
     // wait to allow the row to be updated
-    await new Promise(resolve => setTimeout(resolve, 5_000));
+    await sleep(5_000);
 
     const renamed = await table.get(rowID);
     expect(renamed?.name).toBe("Renamed");
+
+    await table.delete(rowID);
+  });
+
+  it("can clear columns", async () => {
+    const rowID = await table.add({ name: "Delete me" });
+    await sleep(1_000);
+
+    await table.patch(rowID, { name: null });
+    await sleep(1_000);
+
+    const renamed = await table.get(rowID);
+    expect(renamed?.name).toBeUndefined();
 
     await table.delete(rowID);
   });
