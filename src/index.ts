@@ -29,6 +29,7 @@ export class NonQueryableTableError extends Error {}
 export type RowOf<T extends Table<any>> = T extends Table<infer R> ? FullRow<R> : never;
 
 const defaultEndpoint = "https://api.glideapp.io/api/function";
+const defaultEndpointREST = "https://functions.prod.internal.glideapps.com/api";
 
 class Table<T extends ColumnSchema> {
   private props: TableProps<T>;
@@ -69,7 +70,9 @@ class Table<T extends ColumnSchema> {
   constructor(props: TableProps<T>) {
     const token = props.token ?? process.env.GLIDE_TOKEN!;
     this.props = { ...props, token };
-    this.client = makeClient({ token });
+
+    const endpointREST = props.endpointREST ?? defaultEndpointREST;
+    this.client = makeClient({ token, endpoint: endpointREST });
 
     const { columns } = props;
     this.displayNameToName = Object.fromEntries(
@@ -334,7 +337,9 @@ class App {
   constructor(props: AppProps) {
     const token = props.token ?? process.env.GLIDE_TOKEN!;
     this.props = { ...props, token };
-    this.client = makeClient({ token });
+
+    const endpointREST = props.endpointREST ?? defaultEndpointREST;
+    this.client = makeClient({ token, endpoint: endpointREST });
   }
 
   /**
@@ -374,6 +379,7 @@ class App {
       app: this.props.id,
       token: this.props.token,
       endpoint: this.props.endpoint,
+      endpointREST: this.props.endpointREST,
       ...props,
     });
   }
@@ -399,7 +405,9 @@ export function app(props: AppProps | string): App {
  * @param props.token An optional token for authentication.
  * @returns A promise that resolves to an array of applications if successful, or undefined.
  */
-export async function getApps(props: { token?: string } = {}): Promise<App[] | undefined> {
+export async function getApps(
+  props: { token?: string; endpoint?: string } = {}
+): Promise<App[] | undefined> {
   const client = makeClient(props);
   const response = await client.get(`/apps`);
   if (response.status !== 200) return undefined;
@@ -417,7 +425,7 @@ export async function getApps(props: { token?: string } = {}): Promise<App[] | u
  */
 export async function getAppNamed(
   name: string,
-  props: { token?: string } = {}
+  props: { token?: string; endpoint?: string } = {}
 ): Promise<App | undefined> {
   const apps = await getApps(props);
   return apps?.find(a => a.name === name);
