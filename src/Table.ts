@@ -301,17 +301,6 @@ export class Table<T extends ColumnSchema> {
   }
 
   /**
-   * Replaces entire table with rows.
-   *
-   * @param rows An array of rows to add to the table.
-   * @returns A promise that resolves to an array of row IDs for the added rows.
-   */
-  public async replaceRows(rows: Row<T>[]): Promise<RowID[]> {
-    await this.clear();
-    return await this.add(rows);
-  }
-
-  /**
    * Retrieves the schema of the table.
    *
    * @returns A promise that resolves to the schema of the table.
