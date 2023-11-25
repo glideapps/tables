@@ -31,6 +31,21 @@ export type RowOf<T extends Table<any>> = T extends Table<infer R> ? FullRow<R> 
 const defaultEndpoint = "https://api.glideapp.io/api/function";
 const defaultEndpointREST = "https://functions.prod.internal.glideapps.com/api";
 
+const MAX_MUTATIONS = 500;
+
+async function chunked<TItem, TResult>(
+  array: TItem[],
+  chunkSize: number,
+  callback: (chunk: TItem[]) => Promise<TResult>
+): Promise<TResult[]> {
+  const results: TResult[] = [];
+  for (let i = 0; i < array.length; i += chunkSize) {
+    const result = await callback(array.slice(i, i + chunkSize));
+    results.push(result);
+  }
+  return results;
+}
+
 export class Table<T extends ColumnSchema> {
   private props: TableProps<T>;
 
@@ -125,24 +140,28 @@ export class Table<T extends ColumnSchema> {
 
     const renamedRows = this.renameOutgoing(rows);
 
-    const response = await fetch(this.endpoint("/mutateTables"), {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({
-        appID: app,
-        mutations: renamedRows.map(row => ({
-          kind: "add-row-to-table",
-          tableName: table,
-          columnValues: row,
-        })),
-      }),
+    const addedIds = await chunked(renamedRows, MAX_MUTATIONS, async chunk => {
+      const response = await fetch(this.endpoint("/mutateTables"), {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          appID: app,
+          mutations: chunk.map(row => ({
+            kind: "add-row-to-table",
+            tableName: table,
+            columnValues: row,
+          })),
+        }),
+      });
+
+      const added = await response.json();
+      return added.map((row: any) => row.rowID) as string[];
     });
 
-    const added = await response.json();
-    return added.map((row: any) => row.rowID);
+    return addedIds.flat();
   }
 
   /**
@@ -172,23 +191,25 @@ export class Table<T extends ColumnSchema> {
   async setRows(rows: { id: RowIdentifiable<T>; row: Row<T> }[]): Promise<void> {
     const { token, app, table } = this.props;
 
-    await fetch(this.endpoint("/mutateTables"), {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({
-        appID: app,
-        mutations: rows.map(({ id, row }) => {
-          return {
-            kind: "set-columns-in-row",
-            tableName: table,
-            columnValues: this.renameOutgoing([row])[0],
-            rowID: rowID(id),
-          };
+    await chunked(rows, MAX_MUTATIONS, async chunk => {
+      await fetch(this.endpoint("/mutateTables"), {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          appID: app,
+          mutations: chunk.map(({ id, row }) => {
+            return {
+              kind: "set-columns-in-row",
+              tableName: table,
+              columnValues: this.renameOutgoing([row])[0],
+              rowID: rowID(id),
+            };
+          }),
         }),
-      }),
+      });
     });
   }
 
@@ -212,20 +233,22 @@ export class Table<T extends ColumnSchema> {
   public async deleteRows(rows: RowIdentifiable<T>[]): Promise<void> {
     const { token, app, table } = this.props;
 
-    await fetch(this.endpoint("/mutateTables"), {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({
-        appID: app,
-        mutations: rows.map(row => ({
-          kind: "delete-row",
-          tableName: table,
-          rowID: rowID(row),
-        })),
-      }),
+    await chunked(rows, MAX_MUTATIONS, async chunk => {
+      await fetch(this.endpoint("/mutateTables"), {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          appID: app,
+          mutations: chunk.map(row => ({
+            kind: "delete-row",
+            tableName: table,
+            rowID: rowID(row),
+          })),
+        }),
+      });
     });
   }
 
