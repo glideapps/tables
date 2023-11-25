@@ -25,17 +25,15 @@ describe("table", () => {
       stock: 100,
     });
     expect(rowID).toBeDefined();
+
+    await table.deleteRow(rowID);
   });
 
   it("can add multiple rows", async () => {
     const rowIDs = await table.addRows([{}, {}]);
     expect(rowIDs.length).toBe(2);
-  });
 
-  it("can add then delete a row", async () => {
-    const rowID = await table.addRow({});
-    expect(rowID).toBeDefined();
-    await table.deleteRow(rowID);
+    await table.deleteRows(rowIDs);
   });
 
   it("can add then change a row", async () => {
@@ -50,6 +48,8 @@ describe("table", () => {
 
     const renamed = await table.getRow(rowID);
     expect(renamed?.name).toBe("Renamed");
+
+    await table.deleteRow(rowID);
   });
 
   it("can get schema", async () => {
