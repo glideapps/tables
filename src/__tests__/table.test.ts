@@ -2,7 +2,7 @@ require("dotenv").config();
 
 import type { RowOf } from "..";
 
-import { table } from "./common";
+import { bigBigTable, table } from "./common";
 
 describe("table", () => {
   jest.setTimeout(60_000);
@@ -10,6 +10,11 @@ describe("table", () => {
   it("can get rows", async () => {
     const rows = await table.getRows();
     expect(rows).toBeDefined();
+  });
+
+  it("can get more than 10k rows", async () => {
+    const rows = await bigBigTable.getRows();
+    expect(rows.length).toBeGreaterThan(10_000);
   });
 
   it("can get the row type", async () => {
