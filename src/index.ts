@@ -31,7 +31,7 @@ export type RowOf<T extends Table<any>> = T extends Table<infer R> ? FullRow<R> 
 const defaultEndpoint = "https://api.glideapp.io/api/function";
 const defaultEndpointREST = "https://functions.prod.internal.glideapps.com/api";
 
-class Table<T extends ColumnSchema> {
+export class Table<T extends ColumnSchema> {
   private props: TableProps<T>;
 
   private client: Client;
@@ -322,7 +322,7 @@ class Table<T extends ColumnSchema> {
   }
 }
 
-class App {
+export class App {
   private props: AppProps;
   private client: Client;
 
