@@ -32,6 +32,14 @@ export const bigTable = app.table({
   },
 });
 
+export const bigBigTable = app.table({
+  table: "native-table-9d8d43c5-b09b-4723-9c7f-0186991413d6",
+  columns: {
+    id: { type: "number", name: "Name" },
+    value: { type: "number", name: "CBoVo" },
+  },
+});
+
 test("nothing", async () => {
   // pass
 });
