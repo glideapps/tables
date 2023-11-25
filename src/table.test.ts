@@ -5,12 +5,12 @@ import type { RowOf } from ".";
 
 import _ from "lodash";
 
-const endpoint = "https://functions.staging.internal.glideapps.com/api";
+const staging = "https://functions.staging.internal.glideapps.com/api";
 
 const app = glide.app({
   id: "mT91fPcZCWigkZXgSZGJ",
   endpoint: "https://staging.heyglide.com/api/container",
-  endpointREST: endpoint,
+  endpointREST: staging,
 });
 
 const table = app.table({
@@ -33,13 +33,13 @@ const bigTable = app.table({
 
 describe("app", () => {
   it("can get apps", async () => {
-    const apps = await glide.getApps({ endpoint });
+    const apps = await glide.getApps({ endpoint: staging });
     expect(apps).toBeDefined();
     expect(apps?.length).toBeGreaterThan(0);
   });
 
   it("can get an app by name", async () => {
-    const app = await glide.getAppNamed("API Testing", { endpoint });
+    const app = await glide.getAppNamed("API Testing", { endpoint: staging });
     expect(app).toBeDefined();
   });
 
