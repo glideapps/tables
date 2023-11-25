@@ -10,6 +10,8 @@ import {
   type ToSQL,
   NonQueryableTableError,
   RowIdentifiable,
+  NullableRow,
+  NullableFullRow,
 } from "./types";
 import fetch from "cross-fetch";
 import { defaultEndpointREST, defaultEndpoint, MAX_MUTATIONS } from "./constants";
@@ -93,13 +95,17 @@ export class Table<T extends ColumnSchema> {
     return `${base}${path}`;
   }
 
-  private renameOutgoing(rows: Row<T>[]): Row<T>[] {
+  private renameOutgoing(rows: NullableRow<T>[]): NullableRow<T>[] {
     const rename = this.displayNameToName;
     return rows.map(
       row =>
         Object.fromEntries(
-          Object.entries(row).map(([key, value]) => [rename[key] ?? key, value])
-        ) as Row<T>
+          Object.entries(row).map(([key, value]) => [
+            rename[key] ?? key,
+            // null is sent as an empty string
+            value === null ? "" : value,
+          ])
+        ) as NullableRow<T>
     );
   }
 
@@ -128,9 +134,12 @@ export class Table<T extends ColumnSchema> {
    * @param rows An array of rows to add to the table.
    * @returns A promise that resolves to an array of row IDs for the added rows.
    */
-  public async addRows(rows: Row<T>[]): Promise<RowID[]> {
+  public async add(row: Row<T>): Promise<RowID>;
+  public async add(rows: Row<T>[]): Promise<RowID[]>;
+  async add(rowOrRows: Row<T> | Row<T>[]): Promise<RowID | RowID[]> {
     const { app, table } = this.props;
 
+    const rows = Array.isArray(rowOrRows) ? rowOrRows : [rowOrRows];
     const renamedRows = this.renameOutgoing(rows);
 
     const addedIds = await chunked(renamedRows, MAX_MUTATIONS, async chunk => {
@@ -141,29 +150,58 @@ export class Table<T extends ColumnSchema> {
       return rowIDs;
     });
 
-    return addedIds.flat();
+    const rowIDs = addedIds.flat();
+    return Array.isArray(rowOrRows) ? rowIDs : rowIDs[0];
   }
 
   /**
    * Adds rows to the table.
    *
+   * @deprecated Use `add` instead.
+   *
+   * @param rows An array of rows to add to the table.
+   * @returns A promise that resolves to an array of row IDs for the added rows.
+   */
+  public async addRows(rows: Row<T>[]): Promise<RowID[]> {
+    return this.add(rows);
+  }
+
+  /**
+   * Adds rows to the table.
+   *
+   * @deprecated Use `add` instead.
+   *
    * @param rows An array of rows to add to the table.
    * @returns A promise that resolves to an array of row IDs for the added rows.
    */
   public async addRow(row: Row<T>): Promise<RowID> {
-    return this.addRows([row]).then(([id]) => id);
+    return this.add(row);
   }
 
-  /**
-   * Updates multiple rows in the table.
-   *
-   * @param rows An array of objects, each containing an id and a row to update in the table.
-   * @returns A promise that resolves when the rows have been updated.
-   */
-  async setRows(rows: { id: RowIdentifiable<T>; row: Row<T> }[]): Promise<void> {
+  public async patch(id: RowID, row: NullableRow<T>): Promise<void>;
+  public async patch(row: NullableFullRow<T>): Promise<void>;
+  public async patch(rows: NullableFullRow<T>[]): Promise<void>;
+  public async patch(rows: Record<RowID, NullableRow<T>>): Promise<void>;
+  async patch(
+    rows: RowID | NullableFullRow<T> | NullableFullRow<T>[] | Record<RowID, NullableRow<T>>,
+    row?: NullableRow<T>
+  ): Promise<void> {
+    const updates: Record<RowID, NullableRow<T>> = {};
+    if (typeof rows === "string") {
+      updates[rows] = row as Row<T>;
+    } else if ("$rowID" in rows) {
+      updates[rows.$rowID as RowID] = rows as Row<T>;
+    } else if (Array.isArray(rows)) {
+      for (const row of rows) {
+        updates[row.$rowID] = row as Row<T>;
+      }
+    } else {
+      Object.assign(updates, rows);
+    }
+
     const { token, app, table } = this.props;
 
-    await chunked(rows, MAX_MUTATIONS, async chunk => {
+    await chunked(Object.entries(updates), MAX_MUTATIONS, async chunk => {
       await fetch(this.endpoint("/mutateTables"), {
         method: "POST",
         headers: {
@@ -172,7 +210,7 @@ export class Table<T extends ColumnSchema> {
         },
         body: JSON.stringify({
           appID: app,
-          mutations: chunk.map(({ id, row }) => {
+          mutations: chunk.map(([id, row]) => {
             return {
               kind: "set-columns-in-row",
               tableName: table,
@@ -188,12 +226,14 @@ export class Table<T extends ColumnSchema> {
   /**
    * Sets values in a single row in the table.
    *
+   * @deprecated Use `patch` instead.
+   *
    * @param id The ID of the row to set.
    * @param row The row data to set.
    * @returns A promise that resolves when the row has been set.
    */
   public async setRow(id: RowIdentifiable<T>, row: Row<T>): Promise<void> {
-    return await this.setRows([{ id, row }]);
+    return this.patch(rowID(id), row);
   }
 
   /**
@@ -202,8 +242,12 @@ export class Table<T extends ColumnSchema> {
    * @param rows An array of row identifiers to delete from the table.
    * @returns A promise that resolves when the rows have been deleted.
    */
-  public async deleteRows(rows: RowIdentifiable<T>[]): Promise<void> {
+  public async delete(row: RowIdentifiable<T>): Promise<void>;
+  public async delete(rows: RowIdentifiable<T>[]): Promise<void>;
+  async delete(rowOrRows: RowIdentifiable<T> | RowIdentifiable<T>[]): Promise<void> {
     const { token, app, table } = this.props;
+
+    const rows = Array.isArray(rowOrRows) ? rowOrRows : [rowOrRows];
 
     await chunked(rows, MAX_MUTATIONS, async chunk => {
       await fetch(this.endpoint("/mutateTables"), {
@@ -225,21 +269,35 @@ export class Table<T extends ColumnSchema> {
   }
 
   /**
+   * Deletes all rows from the table.
+   */
+  public async clear(): Promise<void> {
+    const rows = await this.getRows();
+    await this.delete(rows);
+  }
+
+  /**
+   * Deletes multiple rows from the table.
+   *
+   * @deprecated Use `delete` instead.
+   *
+   * @param rows An array of row identifiers to delete from the table.
+   * @returns A promise that resolves when the rows have been deleted.
+   */
+  public async deleteRows(rows: RowIdentifiable<T>[]): Promise<void> {
+    return this.delete(rows);
+  }
+
+  /**
    * Deletes a single row from the table.
+   *
+   * @deprecated Use `delete` instead.
    *
    * @param row The identifier of the row to delete from the table.
    * @returns A promise that resolves when the row has been deleted.
    */
   public async deleteRow(row: RowIdentifiable<T>): Promise<void> {
-    await this.deleteRows([row]);
-  }
-
-  /**
-   * Deletes all rows from the table.
-   */
-  public async clear(): Promise<void> {
-    const rows = await this.getRows();
-    await this.deleteRows(rows);
+    return this.delete(row);
   }
 
   /**
@@ -267,12 +325,20 @@ export class Table<T extends ColumnSchema> {
    * @param query Big Tables only. A query to filter the rows by.
    * @returns A promise that resolves to an array of full rows from the table.
    */
-  public async getRows(query?: (q: Query<FullRow<T>>) => ToSQL): Promise<FullRow<T>[]> {
+  public async get(query?: (q: Query<FullRow<T>>) => ToSQL): Promise<FullRow<T>[]>;
+  public async get(rowID: RowID): Promise<FullRow<T> | undefined>;
+  async get(
+    rowIDOrQuery?: RowID | ((q: Query<FullRow<T>>) => ToSQL)
+  ): Promise<FullRow<T> | undefined | FullRow<T>[]> {
+    if (typeof rowIDOrQuery === "string") {
+      return await this.getRow(rowIDOrQuery);
+    }
+
     const { token, app, table } = this.props;
     let startAt: string | undefined;
     let rows: FullRow<T>[] = [];
 
-    const sql = query?.(
+    const sql = rowIDOrQuery?.(
       new QueryBuilder({
         table,
         displayNameToName: name => this.displayNameToName[name],
@@ -309,17 +375,31 @@ export class Table<T extends ColumnSchema> {
   }
 
   /**
+   * Retrieves all rows from the table. Requires Business or Enterprise.
+   *
+   * @deprecated Use `get` instead.
+   *
+   * @param query Big Tables only. A query to filter the rows by.
+   * @returns A promise that resolves to an array of full rows from the table.
+   */
+  public async getRows(query?: (q: Query<FullRow<T>>) => ToSQL): Promise<FullRow<T>[]> {
+    return this.get(query);
+  }
+
+  /**
    * Retrieves a row from the table. Requires Business or Enterprise.
+   *
+   * @deprecated Use `get` instead.
    *
    * @returns A promise that resolves to the row if found, or undefined.
    */
   public async getRow(id: RowID): Promise<FullRow<T> | undefined> {
     let rows: FullRow<T>[] = [];
     try {
-      rows = await this.getRows(q => q.where("$rowID", "=", id).limit(1));
+      rows = await this.get(q => q.where("$rowID", "=", id).limit(1));
     } catch {
       // Try again without a query (table is likely not queryable)
-      rows = await this.getRows();
+      rows = await this.get();
     }
     return rows.find(r => rowID(r) === id);
   }
