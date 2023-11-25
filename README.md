@@ -72,6 +72,9 @@ const rowID = await inventory.add({
 // Change a row
 await inventory.patch(rowID, {
   Price: 200,
+
+  // Use null to clear columns
+  Assignee: null,
 });
 
 // Delete a row
