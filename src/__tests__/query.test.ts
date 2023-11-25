@@ -1,19 +1,19 @@
 require("dotenv").config();
 
-import _ from "lodash";
+import _, { after } from "lodash";
 import { bigTable } from "./common";
 
 beforeAll(async () => {
-  // Delete the rows
-  const rows = await bigTable.getRows();
-  await bigTable.deleteRows(rows);
-
-  // Add some rows
+  await bigTable.clear();
   await bigTable.addRows([
     { name: "Mark", age: 0, otherName: "Marcus" },
     { name: "Jason", age: 100, otherName: "JSON" },
     { name: "David", age: 300, otherName: "David" },
   ]);
+});
+
+afterAll(async () => {
+  await bigTable.clear();
 });
 
 describe("query", () => {

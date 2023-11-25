@@ -263,6 +263,14 @@ export class Table<T extends ColumnSchema> {
   }
 
   /**
+   * Deletes all rows from the table.
+   */
+  public async clear(): Promise<void> {
+    const rows = await this.getRows();
+    await this.deleteRows(rows);
+  }
+
+  /**
    * Retrieves the schema of the table.
    *
    * @returns A promise that resolves to the schema of the table.
