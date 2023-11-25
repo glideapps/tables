@@ -1,6 +1,6 @@
 require("dotenv").config();
 
-import _, { after } from "lodash";
+import _ from "lodash";
 import { bigTable } from "./common";
 
 beforeAll(async () => {
