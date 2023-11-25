@@ -282,8 +282,7 @@ class Table<T extends ColumnSchema> {
         },
         body: JSON.stringify({
           appID: app,
-          queries: [{ tableName: table, sql }],
-          startAt,
+          queries: [{ tableName: table, sql, startAt }],
         }),
       });
 
