@@ -100,6 +100,14 @@ export class Table<T extends ColumnSchema> {
     this.displayNameToName["$rowID"] = "$rowID";
   }
 
+  private endpoint(path: string = "/"): string {
+    let base = this.props.endpoint ?? defaultEndpoint;
+    if (!base.includes("://")) {
+      base = `https://${base}`;
+    }
+    return `${base}${path}`;
+  }
+
   private renameOutgoing(rows: Row<T>[]): Row<T>[] {
     const rename = this.displayNameToName;
     return rows.map(
@@ -136,29 +144,16 @@ export class Table<T extends ColumnSchema> {
    * @returns A promise that resolves to an array of row IDs for the added rows.
    */
   public async addRows(rows: Row<T>[]): Promise<RowID[]> {
-    const { token, app, table } = this.props;
+    const { app, table } = this.props;
 
     const renamedRows = this.renameOutgoing(rows);
 
     const addedIds = await chunked(renamedRows, MAX_MUTATIONS, async chunk => {
-      const response = await fetch(this.endpoint("/mutateTables"), {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          appID: app,
-          mutations: chunk.map(row => ({
-            kind: "add-row-to-table",
-            tableName: table,
-            columnValues: row,
-          })),
-        }),
-      });
-
-      const added = await response.json();
-      return added.map((row: any) => row.rowID) as string[];
+      const response = await this.client.post(`/apps/${app}/tables/${table}/rows`, chunk);
+      const {
+        data: { rowIDs },
+      } = await response.json();
+      return rowIDs;
     });
 
     return addedIds.flat();
@@ -172,14 +167,6 @@ export class Table<T extends ColumnSchema> {
    */
   public async addRow(row: Row<T>): Promise<RowID> {
     return this.addRows([row]).then(([id]) => id);
-  }
-
-  endpoint(path: string = "/"): string {
-    let base = this.props.endpoint ?? defaultEndpoint;
-    if (!base.includes("://")) {
-      base = `https://${base}`;
-    }
-    return `${base}${path}`;
   }
 
   /**
