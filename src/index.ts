@@ -35,7 +35,7 @@ export async function getApps(
   const response = await client.get(`/apps`);
   if (response.status !== 200) return undefined;
   const { data: apps }: { data: IDName[] } = await response.json();
-  return apps.map(idName => app({ ...props, ...idName }));
+  return apps.map(idName => app({ token: props.token, endpointREST: props.endpoint, ...idName }));
 }
 
 /**

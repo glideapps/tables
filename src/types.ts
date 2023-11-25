@@ -17,6 +17,9 @@ export type ColumnSchemaEntry = { type: ColumnType; name?: string };
 
 export type ColumnSchema = Record<string, ColumnType | ColumnSchemaEntry>;
 
+export type APIColumnSchema = { id: string; name: string; type: { kind: string } };
+export type APITableSchema = { columns: APIColumnSchema[] };
+
 export type IDName = { id: string; name: string };
 
 type Pretty<T> = { [K in keyof T]: T[K] } & {};

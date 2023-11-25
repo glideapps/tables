@@ -1,8 +1,9 @@
 import fetch from "cross-fetch";
+import { defaultEndpointREST } from "./constants";
 
 export function makeClient({
   token = process.env.GLIDE_TOKEN!,
-  endpoint = "https://functions.prod.internal.glideapps.com/api",
+  endpoint = defaultEndpointREST,
 }: { token?: string; endpoint?: string } = {}) {
   function api(route: string, r: RequestInit = {}) {
     return fetch(`${endpoint}${route}`, {
