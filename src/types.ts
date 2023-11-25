@@ -47,20 +47,21 @@ export type FullRow<T extends ColumnSchema> = Pretty<
   } & Row<T>
 >;
 
-export interface TableProps<T = {}> {
+interface Props {
   token?: string;
   endpoint?: string;
-  name?: string;
+  endpointREST?: string;
+}
 
+export interface TableProps<T = {}> extends Props {
+  name?: string;
   app: string;
   table: string;
   columns: T;
 }
 
-export interface AppProps {
+export interface AppProps extends Props {
   id: string;
-  token?: string;
-  endpoint?: string;
   name?: string;
 }
 
