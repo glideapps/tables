@@ -136,10 +136,10 @@ npm t
 
 ## Advanced Options
 
-You can specify an alternate endpoint to use Glide's staging environment (for internal testing by Glide).
+You can specify an alternate Glide environment (for internal testing by Glide).
 
 ```ts
-const inventoryStaging = glide.table({
+const staging = new Glide({
   endpoint: "https://staging.heyglide.com/api/container",
   /* ... */
 });

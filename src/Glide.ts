@@ -1,7 +1,7 @@
 import { App } from "./App";
 import { Table } from "./Table";
 import { defaultEndpoint, defaultEndpointREST } from "./constants";
-import type { TableProps, ColumnSchema, AppProps, IDName, GlideProps } from "./types";
+import type { TableProps, ColumnSchema, AppProps, IDName, GlideProps, Tokened } from "./types";
 import fetch from "cross-fetch";
 
 export class Glide {
@@ -85,8 +85,8 @@ export class Glide {
    * @param props.token An optional token for authentication.
    * @returns A promise that resolves to an array of applications if successful, or undefined.
    */
-  public async getApps(): Promise<App[] | undefined> {
-    const response = await this.get(`/apps`);
+  public async getApps(props: Tokened = {}): Promise<App[] | undefined> {
+    const response = await this.with(props).get(`/apps`);
     if (response.status !== 200) return undefined;
     const { data: apps }: { data: IDName[] } = await response.json();
     return apps.map(idName => this.app({ ...idName }));
@@ -100,8 +100,8 @@ export class Glide {
    * @param props.token An optional token for authentication.
    * @returns A promise that resolves to the application if found, or undefined.
    */
-  public async getAppNamed(name: string): Promise<App | undefined> {
-    const apps = await this.getApps();
+  public async getAppNamed(name: string, props: Tokened = {}): Promise<App | undefined> {
+    const apps = await this.getApps(props);
     return apps?.find(a => a.name === name);
   }
 }
