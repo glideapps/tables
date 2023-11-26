@@ -8,7 +8,6 @@ import {
   type FullRow,
   type Query,
   type ToSQL,
-  NonQueryableTableError,
   RowIdentifiable,
   NullableRow,
   NullableFullRow,
@@ -16,6 +15,7 @@ import {
 } from "./types";
 import fetch from "cross-fetch";
 import { defaultEndpointREST, defaultEndpoint, MAX_MUTATIONS } from "./constants";
+import { throwError } from "./common";
 
 async function mapChunks<TItem, TResult>(
   array: TItem[],
@@ -143,6 +143,8 @@ export class Table<T extends ColumnSchema> {
 
     const addedIds = await mapChunks(renamedRows, MAX_MUTATIONS, async chunk => {
       const response = await this.client.post(`/apps/${app}/tables/${table}/rows`, chunk);
+      await throwError(response);
+
       const {
         data: { rowIDs },
       } = await response.json();
@@ -202,7 +204,7 @@ export class Table<T extends ColumnSchema> {
     const { token, app, table } = this.props;
 
     await mapChunks(Object.entries(updates), MAX_MUTATIONS, async chunk => {
-      await fetch(this.endpoint("/mutateTables"), {
+      const response = await fetch(this.endpoint("/mutateTables"), {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -220,6 +222,7 @@ export class Table<T extends ColumnSchema> {
           }),
         }),
       });
+      await throwError(response);
     });
   }
 
@@ -243,7 +246,7 @@ export class Table<T extends ColumnSchema> {
     const rows = Array.isArray(rowOrRows) ? rowOrRows : [rowOrRows];
 
     await mapChunks(rows, MAX_MUTATIONS, async chunk => {
-      await fetch(this.endpoint("/mutateTables"), {
+      const response = await fetch(this.endpoint("/mutateTables"), {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -258,6 +261,7 @@ export class Table<T extends ColumnSchema> {
           })),
         }),
       });
+      await throwError(response);
     });
   }
 
@@ -319,13 +323,7 @@ export class Table<T extends ColumnSchema> {
         }),
       });
 
-      if (!response.ok) {
-        const { message } = await response.json();
-        if (message === "SQL queries only supported for queryable data sources") {
-          throw new NonQueryableTableError(message);
-        }
-        throw new Error(`Error ${response.status}: ${message}`);
-      }
+      await throwError(response);
 
       const [result] = await response.json();
       rows = rows.concat(this.renameIncoming(result.rows));
@@ -344,10 +342,7 @@ export class Table<T extends ColumnSchema> {
     const { app, table } = this.props;
 
     const response = await this.client.get(`/apps/${app}/tables/${table}/schema`);
-
-    if (response.status !== 200) {
-      throw new Error(`Failed to get schema: ${response.status} ${response.statusText}`);
-    }
+    await throwError(response);
 
     return await response.json();
   }
