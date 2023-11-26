@@ -14,6 +14,16 @@ Import it:
 import * as glide from "@glideapps/tables";
 ```
 
+Generate a client:
+
+```shell
+# Interactive:
+npx glide-tables-client
+
+# One-shot
+GLIDE_TOKEN=... npx glide-tables-client [APP_ID] [FILE_NAME]
+```
+
 ## Authorization
 
 Set `GLIDE_TOKEN` environment variable or pass the token as props.
