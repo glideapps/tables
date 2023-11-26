@@ -5,9 +5,10 @@ import { appDefinition } from ".";
 
 import * as glide from "..";
 
-const prompt = require("prompt-sync")();
-
+import makePrompt from "prompt-sync";
 import kebabCase from "lodash/kebabCase";
+
+const prompt = makePrompt();
 
 function getToken(): string {
   let token = process.env.GLIDE_TOKEN;
