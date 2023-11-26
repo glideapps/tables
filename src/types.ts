@@ -1,5 +1,3 @@
-import { extend } from "lodash";
-
 export type ColumnStringType =
   | "string"
   | "uri"
