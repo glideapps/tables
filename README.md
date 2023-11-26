@@ -67,9 +67,6 @@ const inventory = glide.table({
   },
 });
 
-// Name the row type (optional)
-type InventoryItem = glide.RowOf<typeof inventory>;
-
 // Get all rows (Business+)
 const rows = await inventory.get();
 
@@ -101,11 +98,14 @@ await inventory.delete(rowID);
 await inventory.clear();
 ```
 
-### Schema
+### Schema & Types
 
 ```ts
 // Get table schema info (columns with names and types)
 const schema = await inventory.getSchema();
+
+// Name the row type (optional)
+type InventoryItem = glide.RowOf<typeof inventory>;
 ```
 
 ## Queries
