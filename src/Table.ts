@@ -12,6 +12,7 @@ import {
   RowIdentifiable,
   NullableRow,
   NullableFullRow,
+  APITableSchema,
 } from "./types";
 import fetch from "cross-fetch";
 import { defaultEndpointREST, defaultEndpoint, MAX_MUTATIONS } from "./constants";
@@ -305,9 +306,7 @@ export class Table<T extends ColumnSchema> {
    *
    * @returns A promise that resolves to the schema of the table.
    */
-  public async getSchema(): Promise<{
-    data: { columns: Array<{ id: string; name: string; type: { kind: string } }> };
-  }> {
+  public async getSchema(): Promise<{ data: APITableSchema }> {
     const { app, table } = this.props;
 
     const response = await this.client.get(`/apps/${app}/tables/${table}/schema`);
