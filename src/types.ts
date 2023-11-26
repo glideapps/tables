@@ -1,3 +1,5 @@
+import { extend } from "lodash";
+
 export type ColumnStringType =
   | "string"
   | "uri"
@@ -74,14 +76,16 @@ export type NullableFullRow<T extends ColumnSchema> = Pretty<
   } & NullableRow<T>
 >;
 
-export interface TableProps<T = {}> extends Partial<GlideProps> {
+export type Tokened = { token?: string };
+
+export interface TableProps<T = {}> extends Tokened {
   name?: string;
   app: string;
   table: string;
   columns: T;
 }
 
-export interface AppProps extends Partial<GlideProps> {
+export interface AppProps extends Tokened {
   id: string;
   name?: string;
 }
