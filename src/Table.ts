@@ -269,18 +269,6 @@ export class Table<T extends ColumnSchema> {
     await this.delete(rows);
   }
 
-  // Used privately by `get`
-  private async getRow(id: RowID): Promise<FullRow<T> | undefined> {
-    let rows: FullRow<T>[] = [];
-    try {
-      rows = await this.get(q => q.where("$rowID", "=", id).limit(1));
-    } catch {
-      // Try again without a query (table is likely not queryable)
-      rows = await this.get();
-    }
-    return rows.find(r => rowID(r) === id);
-  }
-
   /**
    * Get all rows from the table. Requires Business+.
    */
@@ -362,5 +350,95 @@ export class Table<T extends ColumnSchema> {
     }
 
     return await response.json();
+  }
+
+  // DEPRECATED
+
+  /**
+   * @deprecated Use `id` instead.
+   */
+  public get table(): string {
+    return this.props.table;
+  }
+
+  /**
+   * Adds rows to the table.
+   *
+   * @deprecated Use `add` instead.
+   *
+   * @param rows An array of rows to add to the table.
+   */
+  public async addRows(rows: Row<T>[]): Promise<RowID[]> {
+    return this.add(rows);
+  }
+
+  /**
+   * Adds rows to the table.
+   *
+   * @deprecated Use `add` instead.
+   *
+   * @param rows An array of rows to add to the table.
+   */
+  public async addRow(row: Row<T>): Promise<RowID> {
+    return this.add(row);
+  }
+
+  /**
+   * Sets values in a single row in the table.
+   *
+   * @deprecated Use `update` instead.
+   *
+   * @param id The ID of the row to set.
+   * @param row The row data to set.
+   */
+  public async setRow(id: RowIdentifiable<T>, row: Row<T>): Promise<void> {
+    return this.update(rowID(id), row);
+  }
+
+  /**
+   * Deletes multiple rows from the table.
+   *
+   * @deprecated Use `delete` instead.
+   *
+   * @param rows An array of row identifiers to delete from the table.
+   */
+  public async deleteRows(rows: RowIdentifiable<T>[]): Promise<void> {
+    return this.delete(rows);
+  }
+
+  /**
+   * Deletes a single row from the table.
+   *
+   * @deprecated Use `delete` instead.
+   *
+   * @param row The identifier of the row to delete from the table.
+   */
+  public async deleteRow(row: RowIdentifiable<T>): Promise<void> {
+    return this.delete(row);
+  }
+
+  /**
+   * Retrieves all rows from the table. Requires Business or Enterprise.
+   *
+   * @deprecated Use `get` instead.
+   */
+  public async getRows(): Promise<FullRow<T>[]> {
+    return this.get();
+  }
+
+  /**
+   * Retrieves a row from the table. Requires Business or Enterprise.
+   *
+   * @deprecated Use `get` instead.
+   */
+  public async getRow(id: RowID): Promise<FullRow<T> | undefined> {
+    let rows: FullRow<T>[] = [];
+    try {
+      rows = await this.get(q => q.where("$rowID", "=", id).limit(1));
+    } catch {
+      // Try again without a query (table is likely not queryable)
+      rows = await this.get();
+    }
+    return rows.find(r => rowID(r) === id);
   }
 }
