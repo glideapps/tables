@@ -46,7 +46,7 @@ describe("table", () => {
 
     expect(rowID).toBeDefined();
 
-    await table.patch(rowID, { name: "Renamed" });
+    await table.update(rowID, { name: "Renamed" });
 
     // wait to allow the row to be updated
     await sleep(5_000);
@@ -61,7 +61,7 @@ describe("table", () => {
     const rowID = await table.add({ name: "Delete me" });
     await sleep(1_000);
 
-    await table.patch(rowID, { name: null });
+    await table.update(rowID, { name: null });
     await sleep(1_000);
 
     const renamed = await table.get(rowID);

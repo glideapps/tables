@@ -17,14 +17,14 @@ import {
 import fetch from "cross-fetch";
 import { defaultEndpointREST, defaultEndpoint, MAX_MUTATIONS } from "./constants";
 
-async function chunked<TItem, TResult>(
+async function mapChunks<TItem, TResult>(
   array: TItem[],
   chunkSize: number,
-  callback: (chunk: TItem[]) => Promise<TResult>
+  work: (chunk: TItem[]) => Promise<TResult>
 ): Promise<TResult[]> {
   const results: TResult[] = [];
   for (let i = 0; i < array.length; i += chunkSize) {
-    const result = await callback(array.slice(i, i + chunkSize));
+    const result = await work(array.slice(i, i + chunkSize));
     results.push(result);
   }
   return results;
@@ -52,14 +52,6 @@ export class Table<T extends ColumnSchema> {
    * @returns The table id.
    */
   public get id(): string {
-    return this.props.table;
-  }
-
-  /**
-   * @deprecated Use `id` instead.
-   * @returns The table id.
-   */
-  public get table(): string {
     return this.props.table;
   }
 
@@ -130,20 +122,26 @@ export class Table<T extends ColumnSchema> {
   }
 
   /**
+   * Add a row to the table.
+   *
+   * @param row A row to add.
+   */
+  public async add(row: Row<T>): Promise<RowID>;
+
+  /**
    * Adds rows to the table.
    *
    * @param rows An array of rows to add to the table.
-   * @returns A promise that resolves to an array of row IDs for the added rows.
    */
-  public async add(row: Row<T>): Promise<RowID>;
   public async add(rows: Row<T>[]): Promise<RowID[]>;
+
   async add(rowOrRows: Row<T> | Row<T>[]): Promise<RowID | RowID[]> {
     const { app, table } = this.props;
 
     const rows = Array.isArray(rowOrRows) ? rowOrRows : [rowOrRows];
     const renamedRows = this.renameOutgoing(rows);
 
-    const addedIds = await chunked(renamedRows, MAX_MUTATIONS, async chunk => {
+    const addedIds = await mapChunks(renamedRows, MAX_MUTATIONS, async chunk => {
       const response = await this.client.post(`/apps/${app}/tables/${table}/rows`, chunk);
       const {
         data: { rowIDs },
@@ -156,34 +154,35 @@ export class Table<T extends ColumnSchema> {
   }
 
   /**
-   * Adds rows to the table.
+   * Update a row in the table.
    *
-   * @deprecated Use `add` instead.
-   *
-   * @param rows An array of rows to add to the table.
-   * @returns A promise that resolves to an array of row IDs for the added rows.
+   * @param id The row id to update.
+   * @param row A row to update.
    */
-  public async addRows(rows: Row<T>[]): Promise<RowID[]> {
-    return this.add(rows);
-  }
+  public async update(id: RowID, row: NullableRow<T>): Promise<void>;
 
   /**
-   * Adds rows to the table.
+   * Update a row in the table.
    *
-   * @deprecated Use `add` instead.
-   *
-   * @param rows An array of rows to add to the table.
-   * @returns A promise that resolves to an array of row IDs for the added rows.
+   * @param row A row to update.
    */
-  public async addRow(row: Row<T>): Promise<RowID> {
-    return this.add(row);
-  }
+  public async update(row: NullableFullRow<T>): Promise<void>;
 
-  public async patch(id: RowID, row: NullableRow<T>): Promise<void>;
-  public async patch(row: NullableFullRow<T>): Promise<void>;
-  public async patch(rows: NullableFullRow<T>[]): Promise<void>;
-  public async patch(rows: Record<RowID, NullableRow<T>>): Promise<void>;
-  async patch(
+  /**
+   * Update multiple rows in the table.
+   *
+   * @param rows An array of rows to update.
+   */
+  public async update(rows: NullableFullRow<T>[]): Promise<void>;
+
+  /**
+   * Update multiple rows in the table.
+   *
+   * @param rows An object of row ids to rows to update.
+   */
+  public async update(rows: Record<RowID, NullableRow<T>>): Promise<void>;
+
+  async update(
     rows: RowID | NullableFullRow<T> | NullableFullRow<T>[] | Record<RowID, NullableRow<T>>,
     row?: NullableRow<T>
   ): Promise<void> {
@@ -202,7 +201,7 @@ export class Table<T extends ColumnSchema> {
 
     const { token, app, table } = this.props;
 
-    await chunked(Object.entries(updates), MAX_MUTATIONS, async chunk => {
+    await mapChunks(Object.entries(updates), MAX_MUTATIONS, async chunk => {
       await fetch(this.endpoint("/mutateTables"), {
         method: "POST",
         headers: {
@@ -225,32 +224,25 @@ export class Table<T extends ColumnSchema> {
   }
 
   /**
-   * Sets values in a single row in the table.
+   * Delete a single row from the table.
    *
-   * @deprecated Use `patch` instead.
-   *
-   * @param id The ID of the row to set.
-   * @param row The row data to set.
-   * @returns A promise that resolves when the row has been set.
-   */
-  public async setRow(id: RowIdentifiable<T>, row: Row<T>): Promise<void> {
-    return this.patch(rowID(id), row);
-  }
-
-  /**
-   * Deletes multiple rows from the table.
-   *
-   * @param rows An array of row identifiers to delete from the table.
-   * @returns A promise that resolves when the rows have been deleted.
+   * @param row A row or row id to delete from the table.
    */
   public async delete(row: RowIdentifiable<T>): Promise<void>;
+
+  /**
+   * Delete multiple rows from the table.
+   *
+   * @param rows An array of rows or identifiers to delete.
+   */
   public async delete(rows: RowIdentifiable<T>[]): Promise<void>;
+
   async delete(rowOrRows: RowIdentifiable<T> | RowIdentifiable<T>[]): Promise<void> {
     const { token, app, table } = this.props;
 
     const rows = Array.isArray(rowOrRows) ? rowOrRows : [rowOrRows];
 
-    await chunked(rows, MAX_MUTATIONS, async chunk => {
+    await mapChunks(rows, MAX_MUTATIONS, async chunk => {
       await fetch(this.endpoint("/mutateTables"), {
         method: "POST",
         headers: {
@@ -273,59 +265,41 @@ export class Table<T extends ColumnSchema> {
    * Deletes all rows from the table.
    */
   public async clear(): Promise<void> {
-    const rows = await this.getRows();
+    const rows = await this.get();
     await this.delete(rows);
   }
 
-  /**
-   * Deletes multiple rows from the table.
-   *
-   * @deprecated Use `delete` instead.
-   *
-   * @param rows An array of row identifiers to delete from the table.
-   * @returns A promise that resolves when the rows have been deleted.
-   */
-  public async deleteRows(rows: RowIdentifiable<T>[]): Promise<void> {
-    return this.delete(rows);
-  }
-
-  /**
-   * Deletes a single row from the table.
-   *
-   * @deprecated Use `delete` instead.
-   *
-   * @param row The identifier of the row to delete from the table.
-   * @returns A promise that resolves when the row has been deleted.
-   */
-  public async deleteRow(row: RowIdentifiable<T>): Promise<void> {
-    return this.delete(row);
-  }
-
-  /**
-   * Retrieves the schema of the table.
-   *
-   * @returns A promise that resolves to the schema of the table.
-   */
-  public async getSchema(): Promise<{ data: APITableSchema }> {
-    const { app, table } = this.props;
-
-    const response = await this.client.get(`/apps/${app}/tables/${table}/schema`);
-
-    if (response.status !== 200) {
-      throw new Error(`Failed to get schema: ${response.status} ${response.statusText}`);
+  // Used privately by `get`
+  private async getRow(id: RowID): Promise<FullRow<T> | undefined> {
+    let rows: FullRow<T>[] = [];
+    try {
+      rows = await this.get(q => q.where("$rowID", "=", id).limit(1));
+    } catch {
+      // Try again without a query (table is likely not queryable)
+      rows = await this.get();
     }
-
-    return await response.json();
+    return rows.find(r => rowID(r) === id);
   }
 
   /**
-   * Retrieves all rows from the table. Requires Business or Enterprise.
-   *
-   * @param query Big Tables only. A query to filter the rows by.
-   * @returns A promise that resolves to an array of full rows from the table.
+   * Get all rows from the table. Requires Business+.
    */
-  public async get(query?: (q: Query<FullRow<T>>) => ToSQL): Promise<FullRow<T>[]>;
+  public async get(): Promise<FullRow<T>[]>;
+
+  /**
+   * Get a single row from the table. Requires Business+.
+   *
+   * @param rowID The row id to retrieve.
+   */
   public async get(rowID: RowID): Promise<FullRow<T> | undefined>;
+
+  /**
+   * Query the table (Big Tables only). Requires Business+.
+   *
+   * @param query A query.
+   */
+  public async get(query: (q: Query<FullRow<T>>) => ToSQL): Promise<FullRow<T>[]>;
+
   async get(
     rowIDOrQuery?: RowID | ((q: Query<FullRow<T>>) => ToSQL)
   ): Promise<FullRow<T> | undefined | FullRow<T>[]> {
@@ -374,32 +348,19 @@ export class Table<T extends ColumnSchema> {
   }
 
   /**
-   * Retrieves all rows from the table. Requires Business or Enterprise.
+   * Retrieves the schema of the table.
    *
-   * @deprecated Use `get` instead.
-   *
-   * @param query Big Tables only. A query to filter the rows by.
-   * @returns A promise that resolves to an array of full rows from the table.
+   * @returns A promise that resolves to the schema of the table.
    */
-  public async getRows(query?: (q: Query<FullRow<T>>) => ToSQL): Promise<FullRow<T>[]> {
-    return this.get(query);
-  }
+  public async getSchema(): Promise<{ data: APITableSchema }> {
+    const { app, table } = this.props;
 
-  /**
-   * Retrieves a row from the table. Requires Business or Enterprise.
-   *
-   * @deprecated Use `get` instead.
-   *
-   * @returns A promise that resolves to the row if found, or undefined.
-   */
-  public async getRow(id: RowID): Promise<FullRow<T> | undefined> {
-    let rows: FullRow<T>[] = [];
-    try {
-      rows = await this.get(q => q.where("$rowID", "=", id).limit(1));
-    } catch {
-      // Try again without a query (table is likely not queryable)
-      rows = await this.get();
+    const response = await this.client.get(`/apps/${app}/tables/${table}/schema`);
+
+    if (response.status !== 200) {
+      throw new Error(`Failed to get schema: ${response.status} ${response.statusText}`);
     }
-    return rows.find(r => rowID(r) === id);
+
+    return await response.json();
   }
 }
