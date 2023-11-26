@@ -1,21 +1,25 @@
 import { QueryBuilder } from "./QueryBuilder";
-import { Client, makeClient } from "./rest";
-import {
-  type TableProps,
-  type Row,
-  type ColumnSchema,
-  type RowID,
-  type FullRow,
-  type Query,
-  type ToSQL,
+import type {
+  TableProps,
+  Row,
+  ColumnSchema,
+  RowID,
+  FullRow,
+  Query,
+  ToSQL,
   RowIdentifiable,
   NullableRow,
   NullableFullRow,
   APITableSchema,
 } from "./types";
-import fetch from "cross-fetch";
-import { defaultEndpointREST, defaultEndpoint, MAX_MUTATIONS } from "./constants";
+import { MAX_MUTATIONS } from "./constants";
 import { throwError } from "./common";
+import { Glide } from "./Glide";
+
+/**
+ * Type alias for a row of a given table.
+ */
+export type RowOf<T extends Table<any>> = T extends Table<infer R> ? FullRow<R> : never;
 
 async function mapChunks<TItem, TResult>(
   array: TItem[],
@@ -35,10 +39,6 @@ function rowID(row: RowIdentifiable<any>): RowID {
 }
 
 export class Table<T extends ColumnSchema> {
-  private props: TableProps<T>;
-
-  private client: Client;
-
   private displayNameToName: Record<keyof FullRow<T>, string>;
 
   /**
@@ -62,13 +62,7 @@ export class Table<T extends ColumnSchema> {
     return this.props.name;
   }
 
-  constructor(props: TableProps<T>) {
-    const token = props.token ?? process.env.GLIDE_TOKEN!;
-    this.props = { ...props, token };
-
-    const endpointREST = props.endpointREST ?? defaultEndpointREST;
-    this.client = makeClient({ token, endpoint: endpointREST });
-
+  constructor(private props: TableProps<T>, private glide: Glide) {
     const { columns } = props;
     this.displayNameToName = Object.fromEntries(
       Object.entries(columns).map(([displayName, value]) =>
@@ -78,14 +72,6 @@ export class Table<T extends ColumnSchema> {
       )
     ) as Record<keyof T, string>;
     this.displayNameToName["$rowID"] = "$rowID";
-  }
-
-  private endpoint(path: string = "/"): string {
-    let base = this.props.endpoint ?? defaultEndpoint;
-    if (!base.includes("://")) {
-      base = `https://${base}`;
-    }
-    return `${base}${path}`;
   }
 
   private renameOutgoing(rows: NullableRow<T>[]): NullableRow<T>[] {
@@ -142,7 +128,7 @@ export class Table<T extends ColumnSchema> {
     const renamedRows = this.renameOutgoing(rows);
 
     const addedIds = await mapChunks(renamedRows, MAX_MUTATIONS, async chunk => {
-      const response = await this.client.post(`/apps/${app}/tables/${table}/rows`, chunk);
+      const response = await this.glide.post(`/apps/${app}/tables/${table}/rows`, chunk);
       await throwError(response);
 
       const {
@@ -201,26 +187,17 @@ export class Table<T extends ColumnSchema> {
       Object.assign(updates, rows);
     }
 
-    const { token, app, table } = this.props;
+    const { app, table } = this.props;
 
     await mapChunks(Object.entries(updates), MAX_MUTATIONS, async chunk => {
-      const response = await fetch(this.endpoint("/mutateTables"), {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          appID: app,
-          mutations: chunk.map(([id, row]) => {
-            return {
-              kind: "set-columns-in-row",
-              tableName: table,
-              columnValues: this.renameOutgoing([row])[0],
-              rowID: rowID(id),
-            };
-          }),
-        }),
+      const response = await this.glide.post("/mutateTables", {
+        appID: app,
+        mutations: chunk.map(([id, row]) => ({
+          kind: "set-columns-in-row",
+          tableName: table,
+          columnValues: this.renameOutgoing([row])[0],
+          rowID: rowID(id),
+        })),
       });
       await throwError(response);
     });
@@ -241,25 +218,18 @@ export class Table<T extends ColumnSchema> {
   public async delete(rows: RowIdentifiable<T>[]): Promise<void>;
 
   async delete(rowOrRows: RowIdentifiable<T> | RowIdentifiable<T>[]): Promise<void> {
-    const { token, app, table } = this.props;
+    const { app, table } = this.props;
 
     const rows = Array.isArray(rowOrRows) ? rowOrRows : [rowOrRows];
 
     await mapChunks(rows, MAX_MUTATIONS, async chunk => {
-      const response = await fetch(this.endpoint("/mutateTables"), {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          appID: app,
-          mutations: chunk.map(row => ({
-            kind: "delete-row",
-            tableName: table,
-            rowID: rowID(row),
-          })),
-        }),
+      const response = await this.glide.post("/mutateTables", {
+        appID: app,
+        mutations: chunk.map(row => ({
+          kind: "delete-row",
+          tableName: table,
+          rowID: rowID(row),
+        })),
       });
       await throwError(response);
     });
@@ -299,7 +269,7 @@ export class Table<T extends ColumnSchema> {
       return await this.getRow(rowIDOrQuery);
     }
 
-    const { token, app, table } = this.props;
+    const { app, table } = this.props;
     let startAt: string | undefined;
     let rows: FullRow<T>[] = [];
 
@@ -311,16 +281,9 @@ export class Table<T extends ColumnSchema> {
     ).toSQL();
 
     do {
-      const response = await fetch(this.endpoint("/queryTables"), {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          appID: app,
-          queries: [{ tableName: table, sql, startAt }],
-        }),
+      const response = await this.glide.post("/queryTables", {
+        appID: app,
+        queries: [{ tableName: table, sql, startAt }],
       });
 
       await throwError(response);
@@ -341,7 +304,7 @@ export class Table<T extends ColumnSchema> {
   public async getSchema(): Promise<{ data: APITableSchema }> {
     const { app, table } = this.props;
 
-    const response = await this.client.get(`/apps/${app}/tables/${table}/schema`);
+    const response = await this.glide.get(`/apps/${app}/tables/${table}/schema`);
     await throwError(response);
 
     return await response.json();

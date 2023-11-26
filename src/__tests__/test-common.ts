@@ -1,17 +1,16 @@
 require("dotenv").config();
 
-import * as glide from "..";
-
 import _ from "lodash";
+import { Glide } from "../Glide";
 
-export const staging = "https://functions.staging.internal.glideapps.com/api";
-export const token = process.env.GLIDE_TOKEN_STAGING!;
-
-export const app = glide.app({
-  id: "mT91fPcZCWigkZXgSZGJ",
+export const glideStaging = new Glide({
   endpoint: "https://staging.heyglide.com/api/container",
-  endpointREST: staging,
-  token,
+  endpointREST: "https://functions.staging.internal.glideapps.com/api",
+  token: process.env.GLIDE_TOKEN_STAGING!,
+});
+
+export const app = glideStaging.app({
+  id: "mT91fPcZCWigkZXgSZGJ",
 });
 
 export const table = app.table({

@@ -1,7 +1,7 @@
 import camelCase from "lodash/camelCase";
-import * as glide from "..";
 import { APITableSchema, AppProps, TableProps } from "../types";
 import { Table } from "../Table";
+import { Glide } from "../Glide";
 
 const preamble = `import * as glide from "@glideapps/tables";`;
 
@@ -111,7 +111,12 @@ function tableToJavaScriptColumnSchema(table: APITableSchema) {
   return `{\n${lines}\n    }`;
 }
 
-export async function tableDefinition(props: TableProps, appValue?: string, tables?: Table<{}>[]) {
+export async function tableDefinition(
+  glide: Glide,
+  props: TableProps,
+  appValue?: string,
+  tables?: Table<{}>[]
+) {
   const app = glide.app({ ...props, id: props.app });
   tables ??= await app.getTables();
   if (tables === undefined) throw new Error("Could not get tables");
@@ -136,8 +141,8 @@ export async function tableDefinition(props: TableProps, appValue?: string, tabl
   return src;
 }
 
-export async function appDefinition(props: AppProps) {
-  const apps = await glide.getApps({ token: props.token, endpoint: props.endpointREST });
+export async function appDefinition(glide: Glide, props: AppProps) {
+  const apps = await glide.getApps();
   if (apps === undefined) throw new Error("Could not get apps");
 
   const app = apps.find(a => a.id === props.id);
@@ -156,6 +161,7 @@ export async function appDefinition(props: AppProps) {
 
   for (const table of tables) {
     const tableDeclaration = await tableDefinition(
+      glide,
       { ...props, app: props.id, table: table.id, columns: {} },
       appName,
       tables

@@ -12,6 +12,14 @@ export type ColumnStringType =
   | "emoji"
   | "duration";
 
+export type GlideProps = {
+  token: string;
+  endpoint: string;
+  endpointREST: string;
+};
+
+export type { RowOf } from "./Table";
+
 export type ColumnType = ColumnStringType | "number" | "boolean";
 export type ColumnSchemaEntry = { type: ColumnType; name?: string };
 
@@ -66,20 +74,14 @@ export type NullableFullRow<T extends ColumnSchema> = Pretty<
   } & NullableRow<T>
 >;
 
-interface Props {
-  token?: string;
-  endpoint?: string;
-  endpointREST?: string;
-}
-
-export interface TableProps<T = {}> extends Props {
+export interface TableProps<T = {}> {
   name?: string;
   app: string;
   table: string;
   columns: T;
 }
 
-export interface AppProps extends Props {
+export interface AppProps {
   id: string;
   name?: string;
 }

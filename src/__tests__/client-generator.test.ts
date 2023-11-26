@@ -2,7 +2,7 @@ require("dotenv").config();
 
 import _ from "lodash";
 
-import { staging, token, table } from "./common";
+import { glideStaging, table } from "./test-common";
 import { appDefinition, tableDefinition } from "../client-generator";
 
 describe("client-generator", () => {
@@ -11,22 +11,16 @@ describe("client-generator", () => {
       app: table.app,
       table: table.id,
       columns: {},
-      token,
-      endpoint: "https://staging.heyglide.com/api/container",
-      endpointREST: staging,
     };
-    const declaration = await tableDefinition(props);
+    const declaration = await tableDefinition(glideStaging, props);
     expect(declaration).toBeDefined();
     console.log(declaration);
   });
   it("can generate an app declaration", async () => {
     const props = {
       id: table.app,
-      token,
-      endpoint: "https://staging.heyglide.com/api/container",
-      endpointREST: staging,
     };
-    const declaration = await appDefinition(props);
+    const declaration = await appDefinition(glideStaging, props);
     expect(declaration).toBeDefined();
     console.log(declaration);
   });
