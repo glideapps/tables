@@ -26,8 +26,6 @@ type Pretty<T> = { [K in keyof T]: T[K] } & {};
 
 export type RowIdentifiable<T extends ColumnSchema> = RowID | FullRow<T>;
 
-export class NonQueryableTableError extends Error {}
-
 type ColumnTypeToType<T extends ColumnType> = T extends ColumnStringType
   ? string
   : T extends "number"
