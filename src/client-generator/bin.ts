@@ -5,17 +5,16 @@ import { appDefinition } from ".";
 
 import * as glide from "..";
 
-import makePrompt from "prompt-sync";
+const prompt = require("prompt-sync")();
+
 import kebabCase from "lodash/kebabCase";
 
-const prompt = makePrompt({ sigint: true });
-
-function getToken() {
+function getToken(): string {
   let token = process.env.GLIDE_TOKEN;
   if (token === undefined) {
     token = prompt("Glide Secret Token: ");
   }
-  return token;
+  return token!;
 }
 
 function getAppID(args = process.argv) {
