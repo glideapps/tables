@@ -1,7 +1,7 @@
 require("dotenv").config();
 
 import _ from "lodash";
-import { bigTable } from "./common";
+import { bigTable } from "./test-common";
 
 beforeAll(async () => {
   await bigTable.clear();

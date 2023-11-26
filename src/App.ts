@@ -1,12 +1,8 @@
+import { Glide } from "./Glide";
 import { Table } from "./Table";
-import { defaultEndpointREST } from "./constants";
-import { Client, makeClient } from "./rest";
 import type { TableProps, ColumnSchema, AppProps, IDName } from "./types";
 
 export class App {
-  private props: AppProps;
-  private client: Client;
-
   public get id() {
     return this.props.id;
   }
@@ -15,13 +11,7 @@ export class App {
     return this.props.name;
   }
 
-  constructor(props: AppProps) {
-    const token = props.token ?? process.env.GLIDE_TOKEN!;
-    this.props = { ...props, token };
-
-    const endpointREST = props.endpointREST ?? defaultEndpointREST;
-    this.client = makeClient({ token, endpoint: endpointREST });
-  }
+  constructor(private props: AppProps, private glide: Glide) {}
 
   /**
    * Retrieves a table by its name.
@@ -41,7 +31,7 @@ export class App {
    */
   public async getTables() {
     const { id } = this.props;
-    const result = await this.client.get(`/apps/${id}/tables`);
+    const result = await this.glide.get(`/apps/${id}/tables`);
 
     if (result.status !== 200) return undefined;
 
@@ -56,12 +46,12 @@ export class App {
    * @returns The newly created Table instance.
    */
   public table<T extends ColumnSchema>(props: Omit<TableProps<T>, "app">) {
-    return new Table<T>({
-      app: this.props.id,
-      token: this.props.token,
-      endpoint: this.props.endpoint,
-      endpointREST: this.props.endpointREST,
-      ...props,
-    });
+    return new Table<T>(
+      {
+        app: this.props.id,
+        ...props,
+      },
+      this.glide
+    );
   }
 }

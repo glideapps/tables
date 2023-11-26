@@ -1,8 +1,7 @@
 require("dotenv").config();
 
-import type { RowOf } from "..";
-
-import { bigBigTable, table, sleep } from "./common";
+import { RowOf } from "../types";
+import { bigBigTable, table, sleep } from "./test-common";
 
 describe("table", () => {
   jest.setTimeout(60_000);

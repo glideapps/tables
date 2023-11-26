@@ -3,10 +3,9 @@
 import { writeFileSync } from "fs";
 import { appDefinition } from ".";
 
-import * as glide from "..";
-
 import makePrompt from "prompt-sync";
 import kebabCase from "lodash/kebabCase";
+import { Glide } from "../Glide";
 
 const prompt = makePrompt();
 
@@ -26,10 +25,10 @@ function getAppID(args = process.argv) {
   return appID;
 }
 
-async function getOutFile(token: string, appID: string, args = process.argv) {
+async function getOutFile(glide: Glide, appID: string, args = process.argv) {
   let [, , , outFile] = args;
   if (outFile === undefined) {
-    const apps = await glide.getApps({ token });
+    const apps = await glide.getApps();
     const app = apps!.find(app => app.id === appID);
     const defaultFilename = `${kebabCase(app!.name)}.ts`;
     outFile = prompt(`TypeScript file [${defaultFilename}]: `);
@@ -41,8 +40,11 @@ async function getOutFile(token: string, appID: string, args = process.argv) {
 async function main(args: string[]) {
   const token = getToken();
   const appID = getAppID(args);
-  const outFile = await getOutFile(token, appID, args);
-  const definition = await appDefinition({ token, id: appID });
+
+  const glide = new Glide({ token });
+  const outFile = await getOutFile(glide, appID, args);
+  const definition = await appDefinition(glide, { id: appID });
+
   writeFileSync(outFile, definition);
 }
 
