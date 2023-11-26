@@ -87,7 +87,7 @@ const rowID = await inventory.add({
 await inventory.add([jacket, shirt, shoes]);
 
 // Change a row
-await inventory.patch(rowID, {
+await inventory.update(rowID, {
   Price: 200,
 
   // Use null to clear columns
