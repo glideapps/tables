@@ -74,12 +74,11 @@ type InventoryItem = glide.RowOf<typeof inventory>;
 const rows = await inventory.get();
 
 // Query rows – Big Tables only (Business+)
-const rows = await inventory.get(p => p.where("Price", ">", 100));
+const rows = await inventory.get(q => q.where("Price", ">", 100));
 
 // Add a row
 const rowID = await inventory.add({
   Item: "Test Item",
-  Description: "Test Description",
   Price: 100,
   Assignee: "David",
 });
