@@ -18,10 +18,10 @@ Generate a client:
 
 ```shell
 # Interactive:
-npx glide-tables-client
+npx @glideapps/tables
 
 # One-shot
-GLIDE_TOKEN=... npx glide-tables-client [APP_ID] [FILE_NAME]
+GLIDE_TOKEN=... npx @glideapps/tables [APP_ID] [FILE_NAME]
 ```
 
 ## Authorization
