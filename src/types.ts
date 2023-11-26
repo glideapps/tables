@@ -74,14 +74,14 @@ export type NullableFullRow<T extends ColumnSchema> = Pretty<
   } & NullableRow<T>
 >;
 
-export interface TableProps<T = {}> {
+export interface TableProps<T = {}> extends Partial<GlideProps> {
   name?: string;
   app: string;
   table: string;
   columns: T;
 }
 
-export interface AppProps {
+export interface AppProps extends Partial<GlideProps> {
   id: string;
   name?: string;
 }

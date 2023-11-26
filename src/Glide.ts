@@ -65,7 +65,7 @@ export class Glide {
     if (typeof props === "string") {
       props = { id: props };
     }
-    return new App(props, this);
+    return new App(props, this.with(props));
   }
 
   /**
@@ -75,7 +75,7 @@ export class Glide {
    * @returns The newly created table.
    */
   public table<T extends ColumnSchema>(props: TableProps<T>) {
-    return new Table<T>(props, this);
+    return new Table<T>(props, this.with(props));
   }
 
   /**
