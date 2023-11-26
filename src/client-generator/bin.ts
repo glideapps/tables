@@ -5,9 +5,10 @@ import { appDefinition } from ".";
 
 import * as glide from "..";
 
-// TODO fix these – import breaks the CLI
-const prompt = require("prompt-sync")();
-const kebabCase = require("lodash/kebabCase");
+import makePrompt from "prompt-sync";
+import kebabCase from "lodash/kebabCase";
+
+const prompt = makePrompt();
 
 function getToken(): string {
   let token = process.env.GLIDE_TOKEN;
