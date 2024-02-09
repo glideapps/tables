@@ -57,8 +57,13 @@ export class App {
     );
   }
 
+  /**
+   * Retrieves the manifest for the app.
+   */
   public async getManifest(): Promise<undefined | AppManifest> {
     const { id } = this.props;
+
+    // We don't support staging apps yet
     const manifestUrl = `https://go.glideapps.com/play/${id}?manifest`;
     const result = await fetch(manifestUrl);
 
