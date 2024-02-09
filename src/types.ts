@@ -147,3 +147,23 @@ export interface QueryOr<TRow, TOmit extends string> extends Query<TRow, TOmit> 
   ): Omit<QueryOr<TRow, TOmit>, TOmit>;
   or(column: keyof TRow, compare: IsNull): Omit<QueryOr<TRow, TOmit>, TOmit>;
 }
+
+export interface AppManifest {
+  theme_color: string;
+  author: string;
+  glidePWAAddToHead: string;
+  display: string;
+  description: string;
+  icons: Icon[];
+  start_url: string;
+  background_color: string;
+  name: string;
+  short_name: string;
+}
+
+interface Icon {
+  sizes: string;
+  src: string;
+  purpose: string;
+  type: string;
+}

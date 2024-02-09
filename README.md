@@ -45,6 +45,9 @@ const tables = await myApp.getTables();
 
 // Get a table by name
 const users = await myApp.getTableNamed("Users");
+
+// Get PWA manifest (name, description, icons)
+const manifest = await myApp.getManifest();
 ```
 
 ## Tables
