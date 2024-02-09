@@ -1,6 +1,8 @@
 import { Glide } from "./Glide";
 import { Table } from "./Table";
-import type { TableProps, ColumnSchema, AppProps, IDName } from "./types";
+import type { TableProps, ColumnSchema, AppProps, IDName, AppManifest } from "./types";
+
+import fetch from "cross-fetch";
 
 export class App {
   public get id() {
@@ -53,5 +55,16 @@ export class App {
       },
       this.glide
     );
+  }
+
+  public async getManifest(): Promise<undefined | AppManifest> {
+    const { id } = this.props;
+    const manifestUrl = `https://go.glideapps.com/play/${id}?manifest`;
+    const result = await fetch(manifestUrl);
+
+    if (result.status !== 200) return undefined;
+
+    const manifest = await result.json();
+    return manifest;
   }
 }

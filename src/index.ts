@@ -7,4 +7,4 @@ export const table = defaultClient.table.bind(defaultClient);
 export const getApps = defaultClient.getApps.bind(defaultClient);
 export const getAppNamed = defaultClient.getAppNamed.bind(defaultClient);
 
-export { RowOf } from "./types";
+export { RowOf, AppManifest } from "./types";
