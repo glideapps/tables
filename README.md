@@ -149,3 +149,14 @@ const staging = new Glide({
   /* ... */
 });
 ```
+
+Or with the package:
+
+```ts
+import * as glide from "@glideapps/tables";
+
+const staging = glide.withConfig({
+  endpoint: "https://staging.heyglide.com/api/container",
+  /* ... */
+});
+```

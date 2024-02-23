@@ -1,6 +1,6 @@
 {
   "name": "@glideapps/tables",
-  "version": "1.0.11",
+  "version": "1.0.12",
   "description": "Client for Glide API",
   "main": "dist/cjs/index.js",
   "module": "dist/es6/index.js",
