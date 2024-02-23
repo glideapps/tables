@@ -9,7 +9,18 @@ export const glideStaging = new Glide({
   token: process.env.GLIDE_TOKEN_STAGING!,
 });
 
+export const glideStagingWithClient = new Glide({
+  endpoint: "https://staging.heyglide.com/api/container",
+  endpointREST: "https://functions.staging.internal.glideapps.com/api",
+  token: process.env.GLIDE_CLIENT_TOKEN_STAGING!,
+  clientID: process.env.GLIDE_CLIENT_ID!,
+});
+
 export const app = glideStaging.app({
+  id: "mT91fPcZCWigkZXgSZGJ",
+});
+
+export const appWithClient = glideStagingWithClient.app({
   id: "mT91fPcZCWigkZXgSZGJ",
 });
 

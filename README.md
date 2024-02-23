@@ -28,6 +28,8 @@ GLIDE_TOKEN=... npx @glideapps/tables [APP_ID] [FILE_NAME]
 
 Set `GLIDE_TOKEN` environment variable or pass the token as props.
 
+Using a particular client? Add `GLIDE_CLIENT_ID` environment variable or pass the value as props.
+
 ## Apps
 
 ```ts
