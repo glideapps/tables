@@ -40,3 +40,5 @@ jobs:
         env:
           GLIDE_TOKEN: ${{ secrets.GLIDE_TOKEN }}
           GLIDE_TOKEN_STAGING: ${{ secrets.GLIDE_TOKEN_STAGING }}
+          GLIDE_CLIENT_TOKEN_STAGING: ${{secrets.GLIDE_CLIENT_TOKEN_STAGING}}
+          GLIDE_CLIENT_ID: ${{secrets.GLIDE_CLIENT_ID}}
