@@ -16,6 +16,7 @@ export type GlideProps = {
   token: string;
   endpoint: string;
   endpointREST: string;
+  clientID?: string;
 };
 
 export type { RowOf } from "./Table";

@@ -12,6 +12,7 @@ export class Glide {
       token: props.token ?? process.env.GLIDE_TOKEN!,
       endpoint: props.endpoint ?? defaultEndpoint,
       endpointREST: props.endpointREST ?? defaultEndpointREST,
+      clientID: props.clientID,
     };
   }
 
@@ -30,7 +31,12 @@ export class Glide {
   }
 
   private api(route: string, r: RequestInit = {}) {
-    const { token } = this.props;
+    const { token, clientID } = this.props;
+    const maybeClientIDObject:
+      | {
+          "X-Glide-Client-ID": string;
+        }
+      | {} = clientID !== undefined ? { "X-Glide-Client-ID": clientID } : {};
     return fetch(this.endpoint(route), {
       method: "GET",
       ...r,
@@ -38,6 +44,7 @@ export class Glide {
         Authorization: `Bearer ${token}`,
         "Content-Type": "application/json",
         Accept: "application/json",
+        ...maybeClientIDObject,
         ...r.headers,
       },
     });
