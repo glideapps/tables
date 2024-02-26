@@ -33,6 +33,15 @@ export const table = app.table({
   },
 });
 
+export const tableWithClient = appWithClient.table({
+  table: "native-table-MX8xNW5WWoJhW4fwEeN7",
+  columns: {
+    name: { type: "string", name: "Name" },
+    stock: { type: "number", name: "Description" },
+    renamed: { type: "string", name: "yPXU2" },
+  },
+});
+
 export const bigTable = app.table({
   table: "native-table-9500db9c-fa75-4968-82e3-9d53437893e8",
   columns: {
