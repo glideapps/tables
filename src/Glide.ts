@@ -58,6 +58,10 @@ export class Glide {
     return this.api(r, { method: "POST", body: JSON.stringify(body) });
   }
 
+  public delete(r: string, body: any) {
+    return this.api(r, { method: "DELETE", body: JSON.stringify(body) });
+  }
+
   public with(props: Partial<GlideProps> = {}) {
     return new Glide({ ...this.props, ...props });
   }

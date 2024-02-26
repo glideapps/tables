@@ -223,7 +223,7 @@ export class Table<T extends ColumnSchema> {
     const rows = Array.isArray(rowOrRows) ? rowOrRows : [rowOrRows];
 
     await mapChunks(rows, MAX_MUTATIONS, async chunk => {
-      const response = await this.glide.post("/mutateTables", {
+      const response = await this.glide.delete("/mutateTables", {
         appID: app,
         mutations: chunk.map(row => ({
           kind: "delete-row",
