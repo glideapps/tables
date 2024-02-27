@@ -4,7 +4,7 @@ export async function throwError(response: Response) {
   let message: string | undefined;
   try {
     const data = await response.json();
-    message = data.message;
+    message = data.message ?? data.error.message ?? data.error;
   } catch {}
 
   message ??= `Error ${response.status}: ${response.statusText}`;
