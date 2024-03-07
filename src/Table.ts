@@ -276,7 +276,7 @@ export class Table<T extends ColumnSchema> {
     const sql = rowIDOrQuery?.(
       new QueryBuilder({
         table,
-        displayNameToName: name => this.displayNameToName[name],
+        displayNameToName: name => this.displayNameToName[name] ?? name,
       })
     ).toSQL();
 
