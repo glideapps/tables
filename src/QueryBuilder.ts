@@ -2,22 +2,31 @@ import { Query, QueryAnd, QueryOr, Order, Predicate, Operator, IsNull } from "./
 
 function predicateToSQL<TRow>(
   predicate: Predicate<TRow>,
-  resolveName: (key: keyof TRow) => string
+  resolveName: (key: keyof TRow) => string | undefined
 ): string {
   const { column, compare } = predicate;
+  // If we cannot find the column name, we just use the column name as is.
+  // It's possible that the column exists but we just don't know it on the client.
+  const columnName = resolveName(column) ?? String(column);
 
   if ("other" in predicate) {
     const { other } = predicate;
+
     // TODO this is a bit too tricky. If the RHS matches a column name, we treat it as such. Otherwise we use it bare.
     const otherColumn = resolveName(other as keyof TRow);
     if (otherColumn !== undefined) {
-      return `"${resolveName(column)}" ${compare} "${otherColumn}"`;
+      return `"${columnName}" ${compare} "${otherColumn}"`;
     } else {
+      // We did not resolve the RHS to a column name, so we treat it as a value.
+      // It's possible that this is actually a column that exists in the table,
+      // but the client does not know about it.
+
+      // This quoting is bad – we should require client users to do this.
       const bareValue = typeof other === "string" ? `'${other}'` : other;
-      return `"${resolveName(column)}" ${compare} ${String(bareValue)}`;
+      return `"${columnName}" ${compare} ${String(bareValue)}`;
     }
   }
-  return `"${resolveName(column)}" ${compare}`;
+  return `"${columnName}" ${compare}`;
 }
 
 export class QueryBuilder<TRow, TOmit extends string>
@@ -30,7 +39,9 @@ export class QueryBuilder<TRow, TOmit extends string>
   private _and: Predicate<TRow>[] = [];
   private _or: Predicate<TRow>[] = [];
 
-  constructor(private props: { table: string; displayNameToName(name: keyof TRow): string }) {}
+  constructor(
+    private props: { table: string; displayNameToName(name: keyof TRow): string | undefined }
+  ) {}
 
   public toSQL(): string {
     const { table, displayNameToName } = this.props;
@@ -46,7 +57,10 @@ export class QueryBuilder<TRow, TOmit extends string>
 
     if (this._orderBy !== undefined) {
       const { column, order = "ASC" } = this._orderBy;
-      sql += ` ORDER BY "${displayNameToName(column)}" ${order}`;
+      // If we cannot find the column name, we just use the column name as is.
+      // It's possible that the column exists but we just don't know it on the client.
+      const columnName = displayNameToName(column) ?? String(column);
+      sql += ` ORDER BY "${columnName}" ${order}`;
     }
 
     if (this._limit !== undefined) {
