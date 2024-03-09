@@ -10,3 +10,4 @@ export const withConfig = defaultClient.with.bind(defaultClient);
 
 export { RowOf, AppManifest, ColumnType } from "./types";
 export { type Table } from "./Table";
+export { type Glide } from "./Glide";
