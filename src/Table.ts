@@ -38,7 +38,7 @@ function rowID(row: RowIdentifiable<any>): RowID {
   return typeof row === "string" ? row : row.$rowID;
 }
 
-export class Table<T extends ColumnSchema> {
+export class Table<T extends ColumnSchema = {}> {
   private displayNameToName: Record<keyof FullRow<T>, string>;
 
   /**

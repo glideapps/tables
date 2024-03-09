@@ -9,3 +9,4 @@ export const getAppNamed = defaultClient.getAppNamed.bind(defaultClient);
 export const withConfig = defaultClient.with.bind(defaultClient);
 
 export { RowOf, AppManifest } from "./types";
+export { type Table } from "./Table";
