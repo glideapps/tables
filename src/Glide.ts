@@ -96,7 +96,7 @@ export class Glide {
     const response = await this.with(props).get(`/apps`);
     if (response.status !== 200) return undefined;
     const { data: apps }: { data: IDName[] } = await response.json();
-    return apps.map(idName => this.app({ ...idName }));
+    return apps.map(idName => this.app({ ...idName, ...props }));
   }
 
   /**
