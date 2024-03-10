@@ -32,13 +32,13 @@ export class App {
    * @returns A promise that resolves to an array of tables if successful, or undefined.
    */
   public async getTables() {
-    const { id } = this.props;
+    const { id, token } = this.props;
     const result = await this.glide.get(`/apps/${id}/tables`);
 
     if (result.status !== 200) return undefined;
 
     const { data: tables }: { data: IDName[] } = await result.json();
-    return tables.map(t => this.table({ table: t.id, name: t.name, columns: {} }));
+    return tables.map(t => this.table({ table: t.id, name: t.name, columns: {}, token }));
   }
 
   /**
