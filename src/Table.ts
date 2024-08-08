@@ -21,7 +21,7 @@ import { Glide } from "./Glide";
  */
 export type RowOf<T extends Table<any>> = T extends Table<infer R> ? FullRow<R> : never;
 
-async function mapChunks<TItem, TResult>(
+export async function mapChunks<TItem, TResult>(
   array: TItem[],
   chunkSize: number,
   work: (chunk: TItem[]) => Promise<TResult>

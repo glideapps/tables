@@ -1,7 +1,18 @@
 import { App } from "./App";
+import { BigTable } from "./BigTable";
+import { Stash } from "./Stash";
 import { Table } from "./Table";
 import { defaultEndpoint, defaultEndpointREST } from "./constants";
-import type { TableProps, ColumnSchema, AppProps, IDName, GlideProps, Tokened } from "./types";
+import type {
+  TableProps,
+  ColumnSchema,
+  AppProps,
+  IDName,
+  GlideProps,
+  Tokened,
+  Row,
+  RowID,
+} from "./types";
 import fetch from "cross-fetch";
 
 export class Glide {
@@ -58,6 +69,10 @@ export class Glide {
     return this.api(r, { method: "POST", body: JSON.stringify(body) });
   }
 
+  public put(r: string, body: any) {
+    return this.api(r, { method: "PUT", body: JSON.stringify(body) });
+  }
+
   public with(props: Partial<GlideProps> = {}) {
     return new Glide({ ...this.props, ...props });
   }
@@ -110,5 +125,71 @@ export class Glide {
   public async getAppNamed(name: string, props: Tokened = {}): Promise<App | undefined> {
     const apps = await this.getApps(props);
     return apps?.find(a => a.name === name);
+  }
+
+  /**
+   * Retrieves all big tables.
+   *
+   * @param props An optional object containing a token.
+   * @param props.token An optional token for authentication.
+   * @returns A promise that resolves to an array of tables if successful, or undefined.
+   */
+  public async getBigTables(props: Tokened = {}): Promise<BigTable[] | undefined> {
+    const response = await this.with(props).get(`/tables`);
+    if (response.status !== 200) return undefined;
+    const { data: tables }: { data: IDName[] } = await response.json();
+    console.log(tables);
+    return tables.map(t => this.bigTable({ table: t.id, name: t.name, columns: {}, ...props }));
+  }
+
+  /**
+   * This function creates a new Table object with the provided properties.
+   *
+   * @param props The properties to create the table with.
+   * @returns The newly created table.
+   */
+  public bigTable<T extends ColumnSchema>(props: Omit<TableProps<T>, "app">) {
+    return new BigTable<T>(props, this.with(props));
+  }
+
+  public async addBigTable<T extends ColumnSchema>(props: {
+    name: string;
+    schema: T;
+    rows: Row<T>;
+  }) {
+    const result = await this.post("/tables", props);
+    if (result.status != 200) return undefined;
+    const { data }: { data: { tableId: string; rowIDs: RowID[] } } = await result.json();
+    return {
+      table: this.bigTable({
+        columns: props.schema,
+        table: data.tableId,
+        name: props.name,
+        token: this.props.token,
+      }),
+    };
+  }
+  public async addBigTableStash<T extends ColumnSchema>(props: {
+    name: string;
+    schema: T;
+    stash: Stash<T>;
+  }) {
+    const result = await this.post("/tables", {
+      name: props.name,
+      schema: props.schema,
+      rows: {
+        $stashID: props.stash.stashId,
+      },
+    });
+    if (result.status != 200) return undefined;
+    const { data }: { data: { tableId: string; rowIDs: RowID[] } } = await result.json();
+    return {
+      table: this.bigTable({
+        columns: props.schema,
+        table: data.tableId,
+        name: props.name,
+        token: this.props.token,
+      }),
+    };
   }
 }

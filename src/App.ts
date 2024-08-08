@@ -1,6 +1,6 @@
 import { Glide } from "./Glide";
 import { Table } from "./Table";
-import type { TableProps, ColumnSchema, AppProps, IDName, AppManifest } from "./types";
+import type { TableProps, ColumnSchema, AppProps, IDName, AppManifest, Row, RowID } from "./types";
 
 import fetch from "cross-fetch";
 
